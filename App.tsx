@@ -4,7 +4,7 @@ import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system";
 import { SQLiteProvider } from "expo-sqlite";
 import { Suspense, useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import Loading from "./components/Loading";
 import Home from "./screens/Home";
 
 const Stack = createNativeStackNavigator();
@@ -34,25 +34,11 @@ export default function App() {
       .catch((e) => console.error(e));
   }, []);
 
-  if (!dbLoaded) {
-    return (
-      <View style={{ flex: 1 }}>
-        <ActivityIndicator size={"large"} />
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
+  if (!dbLoaded) return <Loading />;
 
   return (
     <NavigationContainer>
-      <Suspense
-        fallback={
-          <View style={{ flex: 1, backgroundColor: "red" }}>
-            <ActivityIndicator size={"large"} />
-            <Text>Loading...</Text>
-          </View>
-        }
-      >
+      <Suspense fallback={<Loading />}>
         <SQLiteProvider databaseName="MyKhataAppSqlite.db" useSuspense>
           <Stack.Navigator>
             <Stack.Screen
