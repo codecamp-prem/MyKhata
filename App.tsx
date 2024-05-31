@@ -1,8 +1,13 @@
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system";
 import { SQLiteProvider } from "expo-sqlite";
 import { Suspense, useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
+import Home from "./screens/Home";
+
+const Stack = createNativeStackNavigator();
 
 const loadDatabase = async () => {
   const dbName = "MyKhataAppSqlite.db";
@@ -39,12 +44,15 @@ export default function App() {
   }
 
   return (
-    <Suspense>
-      <SQLiteProvider
-        databaseName="MyKhataAppSqlite.db"
-        useSuspense
-      ></SQLiteProvider>
-    </Suspense>
+    <NavigationContainer>
+      <Suspense>
+        <SQLiteProvider databaseName="MyKhataAppSqlite.db" useSuspense>
+          <Stack.Navigator>
+            <Stack.Screen name="Home" component={Home} />
+          </Stack.Navigator>
+        </SQLiteProvider>
+      </Suspense>
+    </NavigationContainer>
   );
 }
 
