@@ -1,6 +1,7 @@
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { Categories } from "../types";
+import CategoryListItem from "./CategoryListItem";
 
 const CategoriesList = ({
   catergories,
@@ -19,7 +20,7 @@ const CategoriesList = ({
             onLongPress={() => deleteCategory(category.id)}
           >
             {/* category item */}
-            <Text>{category.name}</Text>
+            <CategoryListItem category={category} />
           </TouchableOpacity>
         );
       })}
