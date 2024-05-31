@@ -1,6 +1,7 @@
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { ScrollView } from "react-native";
+import CategoriesList from "../components/CategoriesList";
 import { Categories, Items } from "../types";
 
 export default function Home() {
@@ -20,9 +21,18 @@ export default function Home() {
     setCatergories(result);
   }
 
+  async function deleteCategory(id: number) {
+    db.withTransactionAsync(async () => {
+      await db.runAsync(`DELETE FROM Categories WHERE id = ?;`, [id]);
+      await getData();
+    });
+  }
   return (
-    <View>
-      <Text> Home Screen</Text>
-    </View>
+    <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 170 }}>
+      <CategoriesList
+        catergories={catergories}
+        deleteCategory={deleteCategory}
+      />
+    </ScrollView>
   );
 }
