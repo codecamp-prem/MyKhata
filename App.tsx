@@ -45,10 +45,21 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Suspense>
+      <Suspense
+        fallback={
+          <View style={{ flex: 1, backgroundColor: "red" }}>
+            <ActivityIndicator size={"large"} />
+            <Text>Loading...</Text>
+          </View>
+        }
+      >
         <SQLiteProvider databaseName="MyKhataAppSqlite.db" useSuspense>
           <Stack.Navigator>
-            <Stack.Screen name="Home" component={Home} />
+            <Stack.Screen
+              name="Home"
+              component={Home}
+              options={{ headerTitle: "MyKhata", headerLargeTitle: true }}
+            />
           </Stack.Navigator>
         </SQLiteProvider>
       </Suspense>
