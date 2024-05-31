@@ -28,7 +28,7 @@ export default function Home() {
     });
   }
   return (
-    <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 170 }}>
+    <ScrollView contentContainerStyle={{ padding: 10, paddingVertical: 170 }}>
       <CategoriesList
         catergories={catergories}
         deleteCategory={deleteCategory}
