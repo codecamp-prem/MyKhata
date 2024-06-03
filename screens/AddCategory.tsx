@@ -1,54 +1,47 @@
 import { useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
 
+type Category = {
+  name: string;
+};
 function AddCategory() {
   const [name, setName] = useState("");
-  const [quantity, setQuantity] = useState(0);
-  const [cost, setCost] = useState(0);
+  const [errors, setErrors] = useState<Category | undefined>();
 
+  const validate = () => {
+    let isValid = true;
+
+    if (!name.trim()) {
+      // newErrors.name = "Category name is required";
+      setErrors({ name: "Category name is required" });
+      isValid = false;
+    }
+
+    return isValid;
+  };
   const handleSubmit = async () => {
-    try {
-      //await insertStock(name, quantity, cost);
-      // Navigate back to the HomeScreen or display a success message
-    } catch (error) {
-      console.error("Error adding stock:", error);
+    if (validate()) {
+      try {
+        //await insertStock(name, quantity, cost);
+        // Navigate back to the HomeScreen or display a success message
+      } catch (error) {
+        Alert.alert("Error", "Unable to add stock. Please try again later.");
+      }
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Stock Name:</Text>
+        <Text style={styles.label}>Category Name:</Text>
         <TextInput
           style={styles.input}
           value={name}
           onChangeText={setName}
-          placeholder="Enter stock name"
+          placeholder="Enter Category name"
         />
+        {errors?.name && <Text style={styles.errorText}>{errors.name}</Text>}
       </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Quantity:</Text>
-        <TextInput
-          style={styles.input}
-          value={quantity.toString()}
-          onChangeText={(text) => setQuantity(parseInt(text))}
-          keyboardType="numeric"
-          placeholder="Enter quantity"
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Cost:</Text>
-        <TextInput
-          style={styles.input}
-          value={cost.toString()}
-          onChangeText={(text) => setCost(parseFloat(text))}
-          keyboardType="decimal-pad"
-          placeholder="Enter cost"
-        />
-      </View>
-
       <Button title="Add Stock" onPress={handleSubmit} />
     </View>
   );
@@ -74,6 +67,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 8,
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginTop: 4,
   },
 });
 
