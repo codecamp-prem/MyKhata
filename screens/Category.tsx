@@ -1,6 +1,7 @@
+import { Entypo } from "@expo/vector-icons";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Button, ScrollView } from "react-native";
+import { ScrollView, TouchableOpacity } from "react-native";
 import CategoriesList from "../components/CategoriesList";
 import { Categories } from "../types";
 
@@ -27,15 +28,29 @@ const Category = ({ navigation }: any) => {
     });
   }
   return (
-    <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 170 }}>
+    <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 10 }}>
       <CategoriesList
         catergories={catergories}
         deleteCategory={deleteCategory}
       />
-      <Button
-        title="Add New Category"
+      <TouchableOpacity
+        style={{
+          position: "absolute",
+          width: 70,
+          height: 70,
+          alignItems: "center",
+          justifyContent: "center",
+          right: 10,
+          bottom: 0,
+          borderColor: "red",
+          backgroundColor: "#1fc435",
+          borderRadius: 100,
+          borderWidth: 1,
+        }}
         onPress={() => navigation.navigate("AddCategory")}
-      />
+      >
+        <Entypo name="add-to-list" size={24} color="black" />
+      </TouchableOpacity>
     </ScrollView>
   );
 };
