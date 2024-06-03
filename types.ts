@@ -27,3 +27,8 @@ export interface Stocks {
   payment_status: number;
   supplier_name: string | null;
 }
+
+export interface TransactionsByMonth {
+  totalExpenses: number;
+  totalIncome: number;
+}
