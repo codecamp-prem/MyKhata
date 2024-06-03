@@ -1,3 +1,4 @@
+import { useSQLiteContext } from "expo-sqlite";
 import { useState } from "react";
 import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -5,6 +6,8 @@ type Category = {
   name: string;
 };
 function AddCategory() {
+  const db = useSQLiteContext();
+
   const [name, setName] = useState("");
   const [errors, setErrors] = useState<Category | undefined>();
 
@@ -20,9 +23,23 @@ function AddCategory() {
     return isValid;
   };
   const handleSubmit = async () => {
+    console.log("handle submit");
     if (validate()) {
+      console.log("validated");
       try {
         //await insertStock(name, quantity, cost);
+        db.withTransactionAsync(async () => {
+          await db.runAsync(
+            `
+              INSERT INTO Categories (
+                name
+              )
+              VALUES (?);
+            `,
+            [name]
+          );
+        });
+        Alert.alert("Category Added Successfully.");
         // Navigate back to the HomeScreen or display a success message
       } catch (error) {
         Alert.alert("Error", "Unable to add stock. Please try again later.");
