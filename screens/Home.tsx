@@ -3,10 +3,9 @@ import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextStyle } from "react-native";
 import HomeScreenMenu from "../components/HomeScreenMenu";
 import Card from "../components/ui/Card";
-import { Categories, TransactionsByMonth } from "../types";
+import { TransactionsByMonth } from "../types";
 
 export default function Home({ navigation }: { navigation: any }) {
-  const [catergories, setCatergories] = useState<Categories[]>([]);
   const [transactionsByMonth, setTransactionsByMonth] =
     useState<TransactionsByMonth>({
       totalExpenses: 0,
@@ -22,9 +21,6 @@ export default function Home({ navigation }: { navigation: any }) {
   }, [db]);
 
   async function getData() {
-    const result = await db.getAllAsync<Categories>(`SELECT * FROM Categories`);
-    setCatergories(result);
-
     try {
       console.log(getMonthStartEndDates());
       // const query = `SELECT SUM(cost_per_unit * quantity) AS total_cost FROM Stocks WHERE billed_date BETWEEN '${
@@ -44,19 +40,9 @@ export default function Home({ navigation }: { navigation: any }) {
     // setTransactionsByMonth(stocks_bill, );
   }
 
-  async function deleteCategory(id: number) {
-    db.withTransactionAsync(async () => {
-      await db.runAsync(`DELETE FROM Categories WHERE id = ?;`, [id]);
-      await getData();
-    });
-  }
   return (
     <ScrollView contentContainerStyle={{ padding: 10, paddingVertical: 10 }}>
       <TransactionSummary totalExpenses={100} totalIncome={200} />
-      {/* <CategoriesList
-        catergories={catergories}
-        deleteCategory={deleteCategory}
-      /> */}
       <HomeScreenMenu navigation={navigation} />
     </ScrollView>
   );
