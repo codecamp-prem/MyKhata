@@ -1,7 +1,7 @@
 import React from "react";
-import { Alert, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Categories } from "../types";
-import CategoryListItem from "./CategoryListItem";
+import Card from "./ui/Card";
 
 const CategoriesList = ({
   catergories,
@@ -38,13 +38,22 @@ const CategoriesList = ({
             activeOpacity={0.7}
             onLongPress={() => handleShowAlert(category.id)}
           >
-            {/* category item */}
-            <CategoryListItem category={category} />
+            <Card style={styles.container}>
+              <Text>{category.name}</Text>
+            </Card>
           </TouchableOpacity>
         );
       })}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 12,
+    //paddingBottom: 7,
+    // Add other container styles as necessary
+  },
+});
 
 export default CategoriesList;
