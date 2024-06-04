@@ -13,7 +13,7 @@ const HomeScreenMenu = ({ navigation }: any) => {
         <Text style={styles.featureName}>Category</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => navigation.navigate("Category")}
+        onPress={() => navigation.navigate("Items")}
         style={styles.featureBox}
       >
         <Foundation name="pricetag-multiple" size={50} color="#3498db" />

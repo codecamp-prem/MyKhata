@@ -6,8 +6,10 @@ import { SQLiteProvider } from "expo-sqlite";
 import { Suspense, useEffect, useState } from "react";
 import Loading from "./components/Loading";
 import AddCategory from "./screens/AddCategory";
+import AddItems from "./screens/AddItems";
 import Category from "./screens/Category";
 import Home from "./screens/Home";
+import Items from "./screens/Items";
 
 const Stack = createNativeStackNavigator();
 
@@ -61,6 +63,22 @@ export default function App() {
               component={AddCategory}
               options={{
                 headerTitle: "MyKhata- Add Category",
+                headerLargeTitle: true,
+              }}
+            />
+            <Stack.Screen
+              name="Items"
+              component={Items}
+              options={{
+                headerTitle: "MyKhata-Items",
+                headerLargeTitle: true,
+              }}
+            />
+            <Stack.Screen
+              name="AddItems"
+              component={AddItems}
+              options={{
+                headerTitle: "MyKhata- Add Items",
                 headerLargeTitle: true,
               }}
             />

@@ -32,3 +32,14 @@ export interface TransactionsByMonth {
   totalExpenses: number;
   totalIncome: number;
 }
+
+export type ItemsListProps = {
+  category_id: number;
+  category_name: String;
+  id: number;
+  name: string;
+};
+export type ItemsListAddProps = {
+  category_id?: string;
+  name?: string;
+};
