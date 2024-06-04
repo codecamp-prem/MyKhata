@@ -28,12 +28,23 @@ export default function Home({ navigation }: { navigation: any }) {
       // }' AND '${getMonthStartEndDates().endDate}'`;
       const { startDate, endDate } = getMonthStartEndDates();
       const query = `
-    SELECT *
+    SELECT SUM(cost_per_unit * quantity) as total_cost
     FROM Stocks
     WHERE billed_date BETWEEN ? AND ?
   `;
       const stocks = await db.getAllAsync<any>(query, [startDate, endDate]);
+
+      // Get Sales Total for this month(both pending and paid)
+      const query1 = `
+    SELECT SUM(sales_total) as total_sales
+    FROM Sales
+    WHERE sales_date BETWEEN ? AND ?
+  `;
+      const sales = await db.getAllAsync<any>(query1, [startDate, endDate]);
       console.log(stocks);
+      console.log(typeof stocks);
+      console.log(sales);
+      //setTransactionsByMonth({ totalExpenses: stocks, totalIncome: sales });
     } catch (error) {
       console.error("Error executing the database query:", error);
     }
