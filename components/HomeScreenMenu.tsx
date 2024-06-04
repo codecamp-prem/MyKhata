@@ -20,14 +20,14 @@ const HomeScreenMenu = ({ navigation }: any) => {
         <Text style={styles.featureName}>Items</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => navigation.navigate("Category")}
+        onPress={() => navigation.navigate("Sales")}
         style={styles.featureBox}
       >
         <Fontisto name="money-symbol" size={50} color="#3498db" />
         <Text style={styles.featureName}>Sales</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => navigation.navigate("Category")}
+        onPress={() => navigation.navigate("Sales")}
         style={styles.featureBox}
       >
         <Feather name="package" size={50} color="#3498db" />

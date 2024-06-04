@@ -7,9 +7,11 @@ import { Suspense, useEffect, useState } from "react";
 import Loading from "./components/Loading";
 import AddCategory from "./screens/AddCategory";
 import AddItems from "./screens/AddItems";
+import AddSales from "./screens/AddSales";
 import Category from "./screens/Category";
 import Home from "./screens/Home";
 import Items from "./screens/Items";
+import Sales from "./screens/Sales";
 
 const Stack = createNativeStackNavigator();
 
@@ -79,6 +81,22 @@ export default function App() {
               component={AddItems}
               options={{
                 headerTitle: "MyKhata- Add Items",
+                headerLargeTitle: true,
+              }}
+            />
+            <Stack.Screen
+              name="Sales"
+              component={Sales}
+              options={{
+                headerTitle: "MyKhata-Sales",
+                headerLargeTitle: true,
+              }}
+            />
+            <Stack.Screen
+              name="AddSales"
+              component={AddSales}
+              options={{
+                headerTitle: "MyKhata- Add Sales",
                 headerLargeTitle: true,
               }}
             />
