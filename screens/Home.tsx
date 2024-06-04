@@ -22,38 +22,48 @@ export default function Home({ navigation }: { navigation: any }) {
 
   async function getData() {
     try {
-      console.log(getMonthStartEndDates());
-      // const query = `SELECT SUM(cost_per_unit * quantity) AS total_cost FROM Stocks WHERE billed_date BETWEEN '${
-      //   getMonthStartEndDates().startDate
-      // }' AND '${getMonthStartEndDates().endDate}'`;
+      //console.log(getMonthStartEndDates());
+      let total_cost_of_cur_month = 0;
+      let total_sales_of_cur_month = 0;
+
       const { startDate, endDate } = getMonthStartEndDates();
+
+      // Get Stocks Total for this month(both pending and paid)
       const query = `
-    SELECT SUM(cost_per_unit * quantity) as total_cost
-    FROM Stocks
-    WHERE billed_date BETWEEN ? AND ?
-  `;
+        SELECT SUM(cost_per_unit * quantity) as total_cost
+        FROM Stocks
+        WHERE billed_date BETWEEN ? AND ?
+      `;
       const stocks = await db.getAllAsync<any>(query, [startDate, endDate]);
 
       // Get Sales Total for this month(both pending and paid)
       const query1 = `
-    SELECT SUM(sales_total) as total_sales
-    FROM Sales
-    WHERE sales_date BETWEEN ? AND ?
-  `;
+        SELECT SUM(sales_total) as total_sales
+        FROM Sales
+        WHERE sales_date BETWEEN ? AND ?
+      `;
       const sales = await db.getAllAsync<any>(query1, [startDate, endDate]);
-      console.log(stocks);
-      console.log(typeof stocks);
-      console.log(sales);
-      //setTransactionsByMonth({ totalExpenses: stocks, totalIncome: sales });
+      if (stocks != null) {
+        total_cost_of_cur_month = stocks[0].total_cost;
+      }
+      if (sales != null) {
+        total_sales_of_cur_month = sales[0].total_sales;
+      }
+      setTransactionsByMonth({
+        totalExpenses: total_cost_of_cur_month,
+        totalIncome: total_sales_of_cur_month,
+      });
     } catch (error) {
       console.error("Error executing the database query:", error);
     }
-    // setTransactionsByMonth(stocks_bill, );
   }
 
   return (
     <ScrollView contentContainerStyle={{ padding: 10, paddingVertical: 10 }}>
-      <TransactionSummary totalExpenses={100} totalIncome={200} />
+      <TransactionSummary
+        totalExpenses={transactionsByMonth.totalExpenses}
+        totalIncome={transactionsByMonth.totalIncome}
+      />
       <HomeScreenMenu navigation={navigation} />
     </ScrollView>
   );
