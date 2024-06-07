@@ -18,7 +18,9 @@ const SalesList = ({
             key={item.id}
             activeOpacity={0.7}
             onLongPress={() =>
-              navigation.navigate("EditDeleteSales", { salesId: item.id })
+              navigation.navigate("EditDeleteSales", {
+                salesId: item.id,
+              })
             }
           >
             <Card style={styles.container}>

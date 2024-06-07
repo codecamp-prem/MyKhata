@@ -1,4 +1,4 @@
-import { useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useLayoutEffect, useState } from "react";
 import {
@@ -14,6 +14,8 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { Items, PaymentStatus, Sales, SalesListAddProps } from "../types";
 
 function EditDeleteSales() {
+  const navigation = useNavigation();
+  //console.log(navigation);
   const route = useRoute();
   const routeParams: {
     salesId?: number;
@@ -86,8 +88,9 @@ function EditDeleteSales() {
   async function deleteItem(id: number) {
     db.withTransactionAsync(async () => {
       await db.runAsync(`DELETE FROM Sales WHERE id = ?;`, [id]);
-      // send to Sales List
     });
+    Alert.alert("Sales deleted successfully.");
+    navigation.navigate("Sales" as never);
   }
 
   const handleShowAlert = (item_id: number) => {
@@ -137,19 +140,26 @@ function EditDeleteSales() {
         db.withTransactionAsync(async () => {
           await db.runAsync(
             `
-              INSERT INTO Sales (
-                item_id,
-                quantity,
-                sales_total,
-                sales_status,
-                customer_name
-              )
-              VALUES (?, ?, ?, ?, ?);
+              UPDATE Sales
+              SET
+                quantity = ?,
+                sales_total = ?,
+                sales_status = ?,
+                customer_name = ?,
+                item_id = ?
+              WHERE id = ?;
             `,
-            [parseInt(itemValue), quantity, sales_total, sales_status, name]
+            [
+              quantity,
+              sales_total,
+              sales_status,
+              name,
+              parseInt(itemValue),
+              param_salesId,
+            ]
           );
         });
-        Alert.alert("Item Added Successfully.");
+        Alert.alert("Item Updated Successfully.");
         clearFormFields();
         // Navigate back to the HomeScreen or display a success message
       } catch (error) {
@@ -159,7 +169,6 @@ function EditDeleteSales() {
   };
 
   const clearFormFields = () => {
-    setItemValue("");
     Keyboard.dismiss(); // Dismiss the keyboard
   };
 
@@ -189,6 +198,7 @@ function EditDeleteSales() {
           value={quantity}
           onChangeText={setQuantity}
           placeholder="Enter Item Quantity"
+          keyboardType="numeric"
         />
         {errors?.quantity && (
           <Text style={styles.errorText}>{errors.quantity}</Text>
@@ -202,6 +212,7 @@ function EditDeleteSales() {
           value={sales_total}
           onChangeText={setSalesTotal}
           placeholder="Enter sales total"
+          keyboardType="numeric"
         />
         {errors?.sales_total && (
           <Text style={styles.errorText}>{errors.sales_total}</Text>
@@ -245,7 +256,7 @@ function EditDeleteSales() {
         </Pressable>
         <Pressable
           style={[styles.btn, styles.btnSecondary]}
-          onPress={handleSubmit}
+          onPress={() => navigation.goBack()}
         >
           <Text>Cancel</Text>
         </Pressable>

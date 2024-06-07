@@ -14,7 +14,7 @@ const Sales = ({ navigation }: any) => {
     db.withTransactionAsync(async () => {
       await getItemsData();
     });
-  }, [db]);
+  }, [db, navigation]);
 
   async function getItemsData() {
     const result =

@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useLayoutEffect, useState } from "react";
 import {
@@ -13,6 +14,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { Items, PaymentStatus, SalesListAddProps } from "../types";
 
 function AddItems() {
+  const navigation = useNavigation();
   const db = useSQLiteContext();
 
   const [itemValue, setItemValue] = useState("");
@@ -99,6 +101,7 @@ function AddItems() {
         Alert.alert("Item Added Successfully.");
         clearFormFields();
         // Navigate back to the HomeScreen or display a success message
+        navigation.navigate("Sales" as never);
       } catch (error) {
         Alert.alert("Error", "Unable to add stock. Please try again later.");
       }
@@ -136,6 +139,7 @@ function AddItems() {
           value={quantity}
           onChangeText={setQuantity}
           placeholder="Enter Item Quantity"
+          keyboardType="numeric"
         />
         {errors?.quantity && (
           <Text style={styles.errorText}>{errors.quantity}</Text>
@@ -149,6 +153,7 @@ function AddItems() {
           value={sales_total}
           onChangeText={setSalesTotal}
           placeholder="Enter sales total"
+          keyboardType="numeric"
         />
         {errors?.sales_total && (
           <Text style={styles.errorText}>{errors.sales_total}</Text>
