@@ -25,15 +25,9 @@ const Sales = ({ navigation }: any) => {
     setItems(result);
   }
 
-  async function deleteItem(id: number) {
-    db.withTransactionAsync(async () => {
-      await db.runAsync(`DELETE FROM Sales WHERE id = ?;`, [id]);
-      await getItemsData();
-    });
-  }
   return (
     <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 10 }}>
-      <SalesList allitems={allitems} deleteItem={deleteItem} />
+      <SalesList allitems={allitems} navigation={navigation} />
       <TouchableOpacity
         style={{
           position: "absolute",

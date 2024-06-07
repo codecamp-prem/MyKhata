@@ -9,6 +9,7 @@ import AddCategory from "./screens/AddCategory";
 import AddItems from "./screens/AddItems";
 import AddSales from "./screens/AddSales";
 import Category from "./screens/Category";
+import EditDeleteSales from "./screens/EditDeleteSales";
 import Home from "./screens/Home";
 import Items from "./screens/Items";
 import Sales from "./screens/Sales";
@@ -97,6 +98,14 @@ export default function App() {
               component={AddSales}
               options={{
                 headerTitle: "MyKhata- Add Sales",
+                headerLargeTitle: true,
+              }}
+            />
+            <Stack.Screen
+              name="EditDeleteSales"
+              component={EditDeleteSales}
+              options={{
+                headerTitle: "MyKhata- Edit/Delete Sales",
                 headerLargeTitle: true,
               }}
             />

@@ -1,34 +1,15 @@
 import React from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SalesListProps } from "../types";
 import Card from "./ui/Card";
 
 const SalesList = ({
   allitems,
-  deleteItem,
+  navigation,
 }: {
   allitems: SalesListProps[];
-  deleteItem: (id: number) => Promise<void>;
+  navigation: any;
 }) => {
-  const handleShowAlert = (item_id: number) => {
-    Alert.alert(
-      "Confirmation",
-      "Do you want to Delete this Sales detail?",
-      [
-        {
-          text: "Cancel",
-          onPress: () => {},
-          style: "cancel",
-        },
-        {
-          text: "Yes",
-          onPress: () => deleteItem(item_id),
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-
   return (
     <View>
       {allitems.map((item) => {
@@ -36,7 +17,9 @@ const SalesList = ({
           <TouchableOpacity
             key={item.id}
             activeOpacity={0.7}
-            onLongPress={() => handleShowAlert(item.id)}
+            onLongPress={() =>
+              navigation.navigate("EditDeleteSales", { salesId: item.id })
+            }
           >
             <Card style={styles.container}>
               <Text style={styles.category_name}>{item.payment_status}</Text>
