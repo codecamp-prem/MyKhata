@@ -109,7 +109,6 @@ function AddItems() {
   };
 
   const clearFormFields = () => {
-    setItemValue("");
     Keyboard.dismiss(); // Dismiss the keyboard
   };
 

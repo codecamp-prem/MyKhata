@@ -14,6 +14,9 @@ const Sales = ({ navigation }: any) => {
     db.withTransactionAsync(async () => {
       await getItemsData();
     });
+    navigation.addListener("focus", async () => {
+      await getItemsData();
+    });
   }, [db, navigation]);
 
   async function getItemsData() {

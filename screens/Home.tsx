@@ -18,7 +18,10 @@ export default function Home({ navigation }: { navigation: any }) {
     db.withTransactionAsync(async () => {
       await getData();
     });
-  }, [db]);
+    navigation.addListener("focus", async () => {
+      await getData();
+    });
+  }, [db, navigation]);
 
   async function getData() {
     try {
