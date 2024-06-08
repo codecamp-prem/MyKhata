@@ -24,7 +24,7 @@ const Sales = ({ navigation }: any) => {
       await db.getAllAsync<SalesListProps>(`SELECT s.*, i.name as item_name, z.status as payment_status
     FROM Sales s
     JOIN Items i ON s.item_id = i.id
-    JOIN PaymentStatus z ON s.sales_status = z.id ORDER BY s.sales_date DESC`);
+    JOIN PaymentStatus z ON s.sales_status = z.id`);
     setItems(result);
   }
 

@@ -38,6 +38,7 @@ function EditDeleteSales() {
   const [sales_status, setSalesStatus] = useState("");
   const [sales_total, setSalesTotal] = useState("");
   const [name, setSalesCustomer] = useState("");
+  const [sales_date, setSalesDate] = useState("");
 
   const [openItemPicker, setItemPicker] = useState(false);
   const [items, setItems] = useState([{ label: "Select Item", value: "0" }]);
@@ -82,7 +83,7 @@ function EditDeleteSales() {
     setSalesTotal(sales_details_from_id[0].sales_total.toString());
     setSalesStatus(sales_details_from_id[0].sales_status.toString());
     setSalesCustomer(sales_details_from_id[0].customer_name!);
-    //console.log(sales_details_from_id);
+    setSalesDate(sales_details_from_id[0].sales_date!);
   }
 
   async function deleteItem(id: number) {
@@ -231,6 +232,9 @@ function EditDeleteSales() {
         {errors?.sales_status && (
           <Text style={styles.errorText}>{errors.sales_status}</Text>
         )}
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Sold Date: {sales_date}</Text>
       </View>
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Sold to:</Text>

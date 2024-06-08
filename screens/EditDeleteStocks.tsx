@@ -1,20 +1,36 @@
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useLayoutEffect, useState } from "react";
 import {
   Alert,
-  Button,
   Keyboard,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Items, PaymentStatus, SalesListAddProps } from "../types";
+import { Items, PaymentStatus, Sales, SalesListAddProps } from "../types";
 
-function AddItems() {
+function EditDeleteSales() {
   const navigation = useNavigation();
+  //console.log(navigation);
+  const route = useRoute();
+  const routeParams: {
+    salesId?: number;
+  } = route.params || {};
+
+  if (
+    Object.keys(routeParams).length === 0 ||
+    typeof routeParams.salesId == "undefined"
+  ) {
+    console.log("routeParams is empty");
+    return null; // or return some fallback UI
+  }
+
+  const param_salesId = routeParams.salesId;
+
   const db = useSQLiteContext();
 
   const [itemValue, setItemValue] = useState("");
@@ -34,11 +50,11 @@ function AddItems() {
 
   useLayoutEffect(() => {
     db.withTransactionAsync(async () => {
-      await getItemData();
+      await getItemData(param_salesId);
     });
-  }, [db]);
+  }, [db, param_salesId]);
 
-  async function getItemData() {
+  async function getItemData(param_salesId: number) {
     const result = await db.getAllAsync<Items>(`SELECT * FROM Items`);
     const newResult = result.map((item) => ({
       label: item.name,
@@ -49,32 +65,70 @@ function AddItems() {
     const result1 = await db.getAllAsync<PaymentStatus>(
       `SELECT * FROM PaymentStatus`
     );
-
     const newResult1 = result1.map((item) => ({
       label: item.status,
       value: item.id.toString(),
     }));
-
     setPaymentStatus(newResult1);
+
+    // get the data from the `Sales` TBL with the help of param sales_id
+    // set the value to the form fields.
+    const sales_details_from_id = await db.getAllAsync<Sales>(
+      `SELECT * FROM Sales WHERE id = ?`,
+      param_salesId
+    );
+    setItemValue(sales_details_from_id[0].item_id.toString());
+    setQuantity(sales_details_from_id[0].quantity.toString());
+    setSalesTotal(sales_details_from_id[0].sales_total.toString());
+    setSalesStatus(sales_details_from_id[0].sales_status.toString());
+    setSalesCustomer(sales_details_from_id[0].customer_name!);
+    //console.log(sales_details_from_id);
   }
+
+  async function deleteItem(id: number) {
+    db.withTransactionAsync(async () => {
+      await db.runAsync(`DELETE FROM Sales WHERE id = ?;`, [id]);
+    });
+    Alert.alert("Sales deleted successfully.");
+    navigation.navigate("Sales" as never);
+  }
+
+  const handleShowAlert = (item_id: number) => {
+    Alert.alert(
+      "Confirmation",
+      "Do you want to Delete this Sales detail?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => {},
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: () => deleteItem(item_id),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
   const validate = () => {
     let isValid = true;
 
-    if (!itemValue.trim()) {
-      setErrors({ item_id: "Item is required" });
-      isValid = false;
-    }
-    if (!quantity.trim()) {
-      setErrors({ quantity: "Item Quantity is required" });
+    if (!sales_status.trim()) {
+      setErrors({ sales_status: "Sales Status is required" });
       isValid = false;
     }
     if (!sales_total.trim()) {
       setErrors({ sales_total: "Sales total is required" });
       isValid = false;
     }
-    if (!sales_status.trim()) {
-      setErrors({ sales_status: "Sales Status is required" });
+    if (!quantity.trim()) {
+      setErrors({ quantity: "Item Quantity is required" });
+      isValid = false;
+    }
+    if (!itemValue.trim()) {
+      setErrors({ item_id: "Item is required" });
       isValid = false;
     }
     return isValid;
@@ -86,22 +140,28 @@ function AddItems() {
         db.withTransactionAsync(async () => {
           await db.runAsync(
             `
-              INSERT INTO Sales (
-                item_id,
-                quantity,
-                sales_total,
-                sales_status,
-                customer_name
-              )
-              VALUES (?, ?, ?, ?, ?);
+              UPDATE Sales
+              SET
+                quantity = ?,
+                sales_total = ?,
+                sales_status = ?,
+                customer_name = ?,
+                item_id = ?
+              WHERE id = ?;
             `,
-            [parseInt(itemValue), quantity, sales_total, sales_status, name]
+            [
+              quantity,
+              sales_total,
+              sales_status,
+              name,
+              parseInt(itemValue),
+              param_salesId,
+            ]
           );
         });
-        Alert.alert("Item Added Successfully.");
+        Alert.alert("Item Updated Successfully.");
         clearFormFields();
         // Navigate back to the HomeScreen or display a success message
-        navigation.navigate("Sales" as never);
       } catch (error) {
         Alert.alert("Error", "Unable to add stock. Please try again later.");
       }
@@ -181,7 +241,26 @@ function AddItems() {
           placeholder="Enter Customer Name/Number(optional)"
         />
       </View>
-      <Button title="Add Sales" onPress={handleSubmit} />
+      <View style={styles.buttonGroup}>
+        <Pressable
+          style={[styles.btn, styles.btnPrimary]}
+          onPress={handleSubmit}
+        >
+          <Text>Edit Stock</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.btn, styles.btnDanger]}
+          onPress={() => handleShowAlert(param_salesId)}
+        >
+          <Text>Delete Stock</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.btn, styles.btnSecondary]}
+          onPress={() => navigation.goBack()}
+        >
+          <Text>Cancel</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -212,6 +291,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
+  buttonGroup: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  btn: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 4,
+    fontSize: 16,
+    fontWeight: "500",
+    textDecorationLine: "none",
+    backgroundColor: "transparent",
+    color: "inherit",
+  },
+  btnPrimary: {
+    backgroundColor: "#007bff",
+    color: "#fff",
+  },
+  btnDanger: {
+    backgroundColor: "#dc3545",
+    color: "#fff",
+  },
+  btnSecondary: {
+    backgroundColor: "#6c757d",
+    color: "#fff",
+  },
 });
 
-export default AddItems;
+export default EditDeleteSales;

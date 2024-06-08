@@ -18,6 +18,7 @@ export interface Sales {
   sales_total: number;
   sales_status: number;
   customer_name?: string;
+  sales_date?: string;
 }
 export interface Stocks {
   id: number;
