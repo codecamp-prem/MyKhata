@@ -8,11 +8,14 @@ import Loading from "./components/Loading";
 import AddCategory from "./screens/AddCategory";
 import AddItems from "./screens/AddItems";
 import AddSales from "./screens/AddSales";
+import AddStocks from "./screens/AddStocks";
 import Category from "./screens/Category";
 import EditDeleteSales from "./screens/EditDeleteSales";
+import EditDeleteStocks from "./screens/EditDeleteStocks";
 import Home from "./screens/Home";
 import Items from "./screens/Items";
 import Sales from "./screens/Sales";
+import Stocks from "./screens/Stocks";
 
 const Stack = createNativeStackNavigator();
 
@@ -106,6 +109,30 @@ export default function App() {
               component={EditDeleteSales}
               options={{
                 headerTitle: "MyKhata- Edit/Delete Sales",
+                headerLargeTitle: true,
+              }}
+            />
+            <Stack.Screen
+              name="Stocks"
+              component={Stocks}
+              options={{
+                headerTitle: "MyKhata-Stocks",
+                headerLargeTitle: true,
+              }}
+            />
+            <Stack.Screen
+              name="AddStocks"
+              component={AddStocks}
+              options={{
+                headerTitle: "MyKhata- Add Stocks",
+                headerLargeTitle: true,
+              }}
+            />
+            <Stack.Screen
+              name="EditDeleteStocks"
+              component={EditDeleteStocks}
+              options={{
+                headerTitle: "MyKhata- Edit/Delete Stocks",
                 headerLargeTitle: true,
               }}
             />

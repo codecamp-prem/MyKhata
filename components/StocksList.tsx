@@ -1,33 +1,34 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { SalesListProps } from "../types";
+import { StockListProps } from "../types";
 import Card from "./ui/Card";
 
-const SalesList = ({
-  allitems,
+const StocksList = ({
+  allStocks,
   navigation,
 }: {
-  allitems: SalesListProps[];
+  allStocks: StockListProps[];
   navigation: any;
 }) => {
   return (
     <View>
-      {allitems.map((item) => {
+      {allStocks.map((stock) => {
         return (
           <TouchableOpacity
-            key={item.id}
+            key={stock.id}
             activeOpacity={0.7}
             onLongPress={() =>
-              navigation.navigate("EditDeleteSales", {
-                salesId: item.id,
+              navigation.navigate("EditDeleteStocks", {
+                stockId: stock.id,
               })
             }
           >
             <Card style={styles.container}>
-              <Text style={styles.category_name}>{item.payment_status}</Text>
+              <Text style={styles.category_name}>{stock.payment_status}</Text>
               <Text>
-                {item.sales_date.split(" ")[0]} {item.item_name} Rs.
-                {item.sales_total}
+                {stock.billed_date.split(" ")[0]} {stock.item_name} (
+                {stock.quantity} * {stock.cost_per_unit}) = रु
+                {stock.cost_per_unit * stock.quantity}
               </Text>
             </Card>
           </TouchableOpacity>
@@ -48,4 +49,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SalesList;
+export default StocksList;

@@ -11,50 +11,51 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Items, PaymentStatus, Sales, SalesListAddProps } from "../types";
+import { Items, PaymentStatus, StockListAddProps, Stocks } from "../types";
 
-function EditDeleteSales() {
+function EditDeleteStocks() {
   const navigation = useNavigation();
   //console.log(navigation);
   const route = useRoute();
   const routeParams: {
-    salesId?: number;
+    stockId?: number;
   } = route.params || {};
 
   if (
     Object.keys(routeParams).length === 0 ||
-    typeof routeParams.salesId == "undefined"
+    typeof routeParams.stockId == "undefined"
   ) {
     console.log("routeParams is empty");
     return null; // or return some fallback UI
   }
 
-  const param_salesId = routeParams.salesId;
+  const param_stockId = routeParams.stockId;
 
   const db = useSQLiteContext();
 
-  const [itemValue, setItemValue] = useState("");
+  const [itemId, setItemID] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [sales_status, setSalesStatus] = useState("");
-  const [sales_total, setSalesTotal] = useState("");
-  const [name, setSalesCustomer] = useState("");
+  const [payment_status, setSalesStatus] = useState("");
+  const [cost_per_unit, setSalesTotal] = useState("");
+  const [supplier_name, setSalesCustomer] = useState("");
+  const [sales_date, setSalesDate] = useState("");
 
   const [openItemPicker, setItemPicker] = useState(false);
   const [items, setItems] = useState([{ label: "Select Item", value: "0" }]);
   const [openPayStatusPicker, setPayStatusPicker] = useState(false);
-  const [payment_status, setPaymentStatus] = useState([
+  const [tbl_payment_status, setPaymentStatus] = useState([
     { label: "Select Payment Status", value: "0" },
   ]);
 
-  const [errors, setErrors] = useState<SalesListAddProps | undefined>();
+  const [errors, setErrors] = useState<StockListAddProps | undefined>();
 
   useLayoutEffect(() => {
     db.withTransactionAsync(async () => {
-      await getItemData(param_salesId);
+      await getItemData(param_stockId);
     });
-  }, [db, param_salesId]);
+  }, [db, param_stockId]);
 
-  async function getItemData(param_salesId: number) {
+  async function getItemData(param_stockId: number) {
     const result = await db.getAllAsync<Items>(`SELECT * FROM Items`);
     const newResult = result.map((item) => ({
       label: item.name,
@@ -73,30 +74,31 @@ function EditDeleteSales() {
 
     // get the data from the `Sales` TBL with the help of param sales_id
     // set the value to the form fields.
-    const sales_details_from_id = await db.getAllAsync<Sales>(
-      `SELECT * FROM Sales WHERE id = ?`,
-      param_salesId
+    const stocks_details_from_id = await db.getAllAsync<Stocks>(
+      `SELECT * FROM Stocks WHERE id = ?`,
+      param_stockId
     );
-    setItemValue(sales_details_from_id[0].item_id.toString());
-    setQuantity(sales_details_from_id[0].quantity.toString());
-    setSalesTotal(sales_details_from_id[0].sales_total.toString());
-    setSalesStatus(sales_details_from_id[0].sales_status.toString());
-    setSalesCustomer(sales_details_from_id[0].customer_name!);
+    setItemID(stocks_details_from_id[0].item_id.toString());
+    setQuantity(stocks_details_from_id[0].quantity.toString());
+    setSalesTotal(stocks_details_from_id[0].cost_per_unit.toString());
+    setSalesStatus(stocks_details_from_id[0].payment_status.toString());
+    setSalesCustomer(stocks_details_from_id[0].supplier_name!);
+    setSalesDate(stocks_details_from_id[0].billed_date!);
     //console.log(sales_details_from_id);
   }
 
   async function deleteItem(id: number) {
     db.withTransactionAsync(async () => {
-      await db.runAsync(`DELETE FROM Sales WHERE id = ?;`, [id]);
+      await db.runAsync(`DELETE FROM Stocks WHERE id = ?;`, [id]);
     });
-    Alert.alert("Sales deleted successfully.");
-    navigation.navigate("Sales" as never);
+    Alert.alert("Stock deleted successfully.");
+    navigation.navigate("Stocks" as never);
   }
 
   const handleShowAlert = (item_id: number) => {
     Alert.alert(
       "Confirmation",
-      "Do you want to Delete this Sales detail?",
+      "Do you want to Delete this Stock detail?",
       [
         {
           text: "Cancel",
@@ -115,19 +117,19 @@ function EditDeleteSales() {
   const validate = () => {
     let isValid = true;
 
-    if (!sales_status.trim()) {
-      setErrors({ sales_status: "Sales Status is required" });
+    if (!payment_status.trim()) {
+      setErrors({ payment_status: "Payment Status is required" });
       isValid = false;
     }
-    if (!sales_total.trim()) {
-      setErrors({ sales_total: "Sales total is required" });
+    if (!cost_per_unit.trim()) {
+      setErrors({ cost_per_unit: "Stock cost per unit is required" });
       isValid = false;
     }
     if (!quantity.trim()) {
-      setErrors({ quantity: "Item Quantity is required" });
+      setErrors({ quantity: "Stock Quantity is required" });
       isValid = false;
     }
-    if (!itemValue.trim()) {
+    if (!itemId.trim()) {
       setErrors({ item_id: "Item is required" });
       isValid = false;
     }
@@ -136,30 +138,30 @@ function EditDeleteSales() {
   const handleSubmit = async () => {
     if (validate()) {
       try {
-        //await insert in Sales TBL (name);
+        //await insert in Stocks TBL (name);
         db.withTransactionAsync(async () => {
           await db.runAsync(
             `
-              UPDATE Sales
+              UPDATE Stocks
               SET
+                item_id = ?,
                 quantity = ?,
-                sales_total = ?,
-                sales_status = ?,
-                customer_name = ?,
-                item_id = ?
+                cost_per_unit = ?,
+                payment_status = ?,
+                supplier_name = ?
               WHERE id = ?;
             `,
             [
+              parseInt(itemId),
               quantity,
-              sales_total,
-              sales_status,
-              name,
-              parseInt(itemValue),
-              param_salesId,
+              cost_per_unit,
+              payment_status,
+              supplier_name,
+              param_stockId,
             ]
           );
         });
-        Alert.alert("Item Updated Successfully.");
+        Alert.alert("Stock Updated Successfully.");
         clearFormFields();
         // Navigate back to the HomeScreen or display a success message
       } catch (error) {
@@ -175,13 +177,13 @@ function EditDeleteSales() {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sales Item:</Text>
+        <Text style={styles.label}>Stock Item:</Text>
         <DropDownPicker
           open={openItemPicker}
-          value={itemValue}
+          value={itemId}
           items={items}
           setOpen={setItemPicker}
-          setValue={setItemValue}
+          setValue={setItemID}
           setItems={setItems}
           zIndex={3000}
           zIndexInverse={1000}
@@ -192,7 +194,7 @@ function EditDeleteSales() {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sales Quantity:</Text>
+        <Text style={styles.label}>Stock Quantity:</Text>
         <TextInput
           style={styles.input}
           value={quantity}
@@ -206,39 +208,42 @@ function EditDeleteSales() {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sales Total:</Text>
+        <Text style={styles.label}>Cost per Unit:</Text>
         <TextInput
           style={styles.input}
-          value={sales_total}
+          value={cost_per_unit}
           onChangeText={setSalesTotal}
-          placeholder="Enter sales total"
+          placeholder="Enter Cost per Unit"
           keyboardType="numeric"
         />
-        {errors?.sales_total && (
-          <Text style={styles.errorText}>{errors.sales_total}</Text>
+        {errors?.cost_per_unit && (
+          <Text style={styles.errorText}>{errors.cost_per_unit}</Text>
         )}
       </View>
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sales Status:</Text>
+        <Text style={styles.label}>Payment Status:</Text>
         <DropDownPicker
           open={openPayStatusPicker}
-          value={sales_status}
-          items={payment_status}
+          value={payment_status}
+          items={tbl_payment_status}
           setOpen={setPayStatusPicker}
           setValue={setSalesStatus}
           setItems={setPaymentStatus}
         />
-        {errors?.sales_status && (
-          <Text style={styles.errorText}>{errors.sales_status}</Text>
+        {errors?.payment_status && (
+          <Text style={styles.errorText}>{errors.payment_status}</Text>
         )}
       </View>
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sold to:</Text>
+        <Text style={styles.label}>Purchase Date: {sales_date}</Text>
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Supplier Name:</Text>
         <TextInput
           style={styles.input}
-          value={name}
+          value={supplier_name}
           onChangeText={setSalesCustomer}
-          placeholder="Enter Customer Name/Number(optional)"
+          placeholder="Enter Supplier Name/Number(optional)"
         />
       </View>
       <View style={styles.buttonGroup}>
@@ -250,7 +255,7 @@ function EditDeleteSales() {
         </Pressable>
         <Pressable
           style={[styles.btn, styles.btnDanger]}
-          onPress={() => handleShowAlert(param_salesId)}
+          onPress={() => handleShowAlert(param_stockId)}
         >
           <Text>Delete Stock</Text>
         </Pressable>
@@ -322,4 +327,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EditDeleteSales;
+export default EditDeleteStocks;

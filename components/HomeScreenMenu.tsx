@@ -27,7 +27,7 @@ const HomeScreenMenu = ({ navigation }: any) => {
         <Text style={styles.featureName}>Sales</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => navigation.navigate("Sales")}
+        onPress={() => navigation.navigate("Stocks")}
         style={styles.featureBox}
       >
         <Feather name="package" size={50} color="#3498db" />

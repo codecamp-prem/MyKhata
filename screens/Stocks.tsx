@@ -2,11 +2,11 @@ import { Entypo } from "@expo/vector-icons";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
-import SalesList from "../components/SalesList";
-import { SalesListProps } from "../types";
+import StocksList from "../components/StocksList";
+import { StockListProps } from "../types";
 
-const Sales = ({ navigation }: any) => {
-  const [allitems, setItems] = useState<SalesListProps[]>([]);
+const Stocks = ({ navigation }: any) => {
+  const [allStocks, setItems] = useState<StockListProps[]>([]);
 
   const db = useSQLiteContext();
 
@@ -21,16 +21,16 @@ const Sales = ({ navigation }: any) => {
 
   async function getItemsData() {
     const result =
-      await db.getAllAsync<SalesListProps>(`SELECT s.*, i.name as item_name, z.status as payment_status
-    FROM Sales s
+      await db.getAllAsync<StockListProps>(`SELECT s.*, i.name as item_name, z.status as payment_status
+    FROM Stocks s
     JOIN Items i ON s.item_id = i.id
-    JOIN PaymentStatus z ON s.sales_status = z.id`);
+    JOIN PaymentStatus z ON s.payment_status = z.id  ORDER BY s.billed_date DESC`);
     setItems(result);
   }
 
   return (
     <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 10 }}>
-      <SalesList allitems={allitems} navigation={navigation} />
+      <StocksList allStocks={allStocks} navigation={navigation} />
       <TouchableOpacity
         style={{
           position: "absolute",
@@ -45,7 +45,7 @@ const Sales = ({ navigation }: any) => {
           borderRadius: 100,
           borderWidth: 1,
         }}
-        onPress={() => navigation.navigate("AddSales")}
+        onPress={() => navigation.navigate("AddStocks")}
       >
         <Entypo name="add-to-list" size={24} color="black" />
       </TouchableOpacity>
@@ -53,4 +53,4 @@ const Sales = ({ navigation }: any) => {
   );
 };
 
-export default Sales;
+export default Stocks;

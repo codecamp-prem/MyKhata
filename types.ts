@@ -26,7 +26,8 @@ export interface Stocks {
   quantity: number;
   cost_per_unit: number;
   payment_status: number;
-  supplier_name: string | null;
+  supplier_name?: string;
+  billed_date?: string;
 }
 
 export interface TransactionsByMonth {
@@ -61,4 +62,21 @@ export type SalesListAddProps = {
   sales_status?: string;
   sales_total?: string;
   name?: string;
+};
+export type StockListProps = {
+  id: number;
+  item_id: number;
+  billed_date: string;
+  quantity: number;
+  cost_per_unit: number;
+  payment_status: string;
+  supplier_name: string;
+  item_name: string;
+};
+export type StockListAddProps = {
+  item_id?: string;
+  quantity?: string;
+  cost_per_unit?: string;
+  payment_status?: string;
+  supplier_name?: string;
 };
