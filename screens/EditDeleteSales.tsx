@@ -250,13 +250,13 @@ function EditDeleteSales() {
           style={[styles.btn, styles.btnPrimary]}
           onPress={handleSubmit}
         >
-          <Text>Edit Stock</Text>
+          <Text>Edit Sales</Text>
         </Pressable>
         <Pressable
           style={[styles.btn, styles.btnDanger]}
           onPress={() => handleShowAlert(param_salesId)}
         >
-          <Text>Delete Stock</Text>
+          <Text>Delete Sales</Text>
         </Pressable>
         <Pressable
           style={[styles.btn, styles.btnSecondary]}

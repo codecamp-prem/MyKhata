@@ -1,31 +1,37 @@
 import { Entypo } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import ItemsList from "../components/ItemsList";
 import { ItemsListProps } from "../types";
 
-const ItemsScreen = ({ navigation }: any) => {
+const ItemsScreen = () => {
+  const navigation = useNavigation();
   const [allitems, setItems] = useState<ItemsListProps[]>([]);
 
   const db = useSQLiteContext();
+
+  const getItemsData = useCallback(async () => {
+    const result = await db.getAllAsync<ItemsListProps>(`
+      SELECT i.*, c.name as category_name
+      FROM Items i
+      JOIN Categories c ON i.category_id = c.id
+    `);
+    setItems(result);
+  }, [db, setItems]);
 
   useEffect(() => {
     db.withTransactionAsync(async () => {
       await getItemsData();
     });
-    navigation.addListener("focus", async () => {
-      await getItemsData();
-    });
-  }, [db, navigation]);
 
-  async function getItemsData() {
-    const result =
-      await db.getAllAsync<ItemsListProps>(`SELECT i.*, c.name as category_name
-    FROM Items i
-    JOIN Categories c ON i.category_id = c.id`);
-    setItems(result);
-  }
+    const focusListener = navigation.addListener("focus", getItemsData);
+
+    return () => {
+      focusListener(); // Unsubscribe the listener
+    };
+  }, [db, navigation, getItemsData]);
 
   async function deleteItem(id: number) {
     db.withTransactionAsync(async () => {
@@ -50,7 +56,7 @@ const ItemsScreen = ({ navigation }: any) => {
           borderRadius: 100,
           borderWidth: 1,
         }}
-        onPress={() => navigation.navigate("AddItems")}
+        onPress={() => navigation.navigate("AddItems" as never)}
       >
         <Entypo name="add-to-list" size={24} color="black" />
       </TouchableOpacity>

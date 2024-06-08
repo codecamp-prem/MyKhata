@@ -107,7 +107,8 @@ function AddStocks() {
         Alert.alert("Stock Added Successfully.");
         clearFormFields();
         // Navigate back to the HomeScreen or display a success message
-        navigation.navigate("Stocks" as never);
+        //navigation.navigate("Stocks" as never);
+        navigation.goBack();
       } catch (error) {
         Alert.alert("Error", "Unable to add stock. Please try again later.");
       }

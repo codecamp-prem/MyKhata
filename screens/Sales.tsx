@@ -1,11 +1,13 @@
 import { Entypo } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import SalesList from "../components/SalesList";
 import { SalesListProps } from "../types";
 
-const Sales = ({ navigation }: any) => {
+const Sales = () => {
+  const navigation = useNavigation();
   const [allitems, setItems] = useState<SalesListProps[]>([]);
 
   const db = useSQLiteContext();
@@ -15,6 +17,7 @@ const Sales = ({ navigation }: any) => {
       await getItemsData();
     });
     navigation.addListener("focus", async () => {
+      //console.log(" Sales screen get called");
       await getItemsData();
     });
   }, [db, navigation]);
@@ -45,7 +48,7 @@ const Sales = ({ navigation }: any) => {
           borderRadius: 100,
           borderWidth: 1,
         }}
-        onPress={() => navigation.navigate("AddSales")}
+        onPress={() => navigation.navigate("AddSales" as never)}
       >
         <Entypo name="add-to-list" size={24} color="black" />
       </TouchableOpacity>

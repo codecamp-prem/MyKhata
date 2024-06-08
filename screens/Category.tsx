@@ -1,11 +1,14 @@
 import { Entypo } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import CategoriesList from "../components/CategoriesList";
 import { Categories } from "../types";
 
-const Category = ({ navigation }: any) => {
+const Category = () => {
+  const navigation = useNavigation();
+
   const [catergories, setCatergories] = useState<Categories[]>([]);
 
   const db = useSQLiteContext();
@@ -15,6 +18,7 @@ const Category = ({ navigation }: any) => {
       await getCategoryData();
     });
     navigation.addListener("focus", async () => {
+      //console.log(" Category screen get called");
       await getCategoryData();
     });
   }, [db, navigation]);
@@ -50,7 +54,7 @@ const Category = ({ navigation }: any) => {
           borderRadius: 100,
           borderWidth: 1,
         }}
-        onPress={() => navigation.navigate("AddCategory")}
+        onPress={() => navigation.navigate("AddCategory" as never)}
       >
         <Entypo name="add-to-list" size={24} color="black" />
       </TouchableOpacity>

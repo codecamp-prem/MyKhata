@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextStyle } from "react-native";
@@ -5,7 +6,8 @@ import HomeScreenMenu from "../components/HomeScreenMenu";
 import Card from "../components/ui/Card";
 import { TransactionsByMonth } from "../types";
 
-export default function Home({ navigation }: { navigation: any }) {
+export default function Home() {
+  const navigation = useNavigation();
   const [transactionsByMonth, setTransactionsByMonth] =
     useState<TransactionsByMonth>({
       totalExpenses: 0,

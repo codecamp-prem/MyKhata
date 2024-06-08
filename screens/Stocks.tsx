@@ -1,11 +1,13 @@
 import { Entypo } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import StocksList from "../components/StocksList";
 import { StockListProps } from "../types";
 
-const Stocks = ({ navigation }: any) => {
+const Stocks = () => {
+  const navigation = useNavigation();
   const [allStocks, setItems] = useState<StockListProps[]>([]);
 
   const db = useSQLiteContext();
@@ -14,10 +16,15 @@ const Stocks = ({ navigation }: any) => {
     db.withTransactionAsync(async () => {
       await getItemsData();
     });
-    navigation.addListener("focus", async () => {
+  }, [db]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", async () => {
+      // console.log("--- stocks screen get called --");
       await getItemsData();
     });
-  }, [db, navigation]);
+    return unsubscribe;
+  }, [navigation]);
 
   async function getItemsData() {
     const result =
@@ -45,7 +52,7 @@ const Stocks = ({ navigation }: any) => {
           borderRadius: 100,
           borderWidth: 1,
         }}
-        onPress={() => navigation.navigate("AddStocks")}
+        onPress={() => navigation.navigate("AddStocks" as never)}
       >
         <Entypo name="add-to-list" size={24} color="black" />
       </TouchableOpacity>
