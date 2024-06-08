@@ -14,7 +14,10 @@ const Category = ({ navigation }: any) => {
     db.withTransactionAsync(async () => {
       await getCategoryData();
     });
-  }, [db]);
+    navigation.addListener("focus", async () => {
+      await getCategoryData();
+    });
+  }, [db, navigation]);
 
   async function getCategoryData() {
     const result = await db.getAllAsync<Categories>(`SELECT * FROM Categories`);

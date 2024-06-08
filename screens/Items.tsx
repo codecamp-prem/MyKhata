@@ -14,7 +14,10 @@ const ItemsScreen = ({ navigation }: any) => {
     db.withTransactionAsync(async () => {
       await getItemsData();
     });
-  }, [db]);
+    navigation.addListener("focus", async () => {
+      await getItemsData();
+    });
+  }, [db, navigation]);
 
   async function getItemsData() {
     const result =
