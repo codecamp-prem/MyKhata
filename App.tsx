@@ -14,8 +14,8 @@ import EditDeleteSales from "./screens/EditDeleteSales";
 import EditDeleteStocks from "./screens/EditDeleteStocks";
 import Home from "./screens/Home";
 import Items from "./screens/Items";
+import Purchase from "./screens/Purchase";
 import Sales from "./screens/Sales";
-import Stocks from "./screens/Stocks";
 
 const Stack = createNativeStackNavigator();
 
@@ -114,7 +114,7 @@ export default function App() {
             />
             <Stack.Screen
               name="Stocks"
-              component={Stocks}
+              component={Purchase}
               options={{
                 headerTitle: "MyKhata-Stocks",
                 headerLargeTitle: true,

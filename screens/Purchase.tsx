@@ -6,7 +6,7 @@ import { ScrollView, TouchableOpacity } from "react-native";
 import StocksList from "../components/StocksList";
 import { StockListProps } from "../types";
 
-const Stocks = () => {
+const Purchase = () => {
   const navigation = useNavigation();
   const [allStocks, setItems] = useState<StockListProps[]>([]);
 
@@ -60,4 +60,4 @@ const Stocks = () => {
   );
 };
 
-export default Stocks;
+export default Purchase;
