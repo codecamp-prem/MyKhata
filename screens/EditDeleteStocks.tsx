@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Items, PaymentStatus, StockListAddProps, Stocks } from "../types";
+import { Items, StockListAddProps, Stocks } from "../types";
 
 function EditDeleteStocks() {
   const navigation = useNavigation();
@@ -43,10 +43,6 @@ function EditDeleteStocks() {
 
   const [openItemPicker, setItemPicker] = useState(false);
   const [items, setItems] = useState([{ label: "Select Item", value: "0" }]);
-  const [openPayStatusPicker, setPayStatusPicker] = useState(false);
-  const [tbl_payment_status, setPaymentStatus] = useState([
-    { label: "Select Payment Status", value: "0" },
-  ]);
 
   const [errors, setErrors] = useState<StockListAddProps | undefined>();
 
@@ -63,15 +59,6 @@ function EditDeleteStocks() {
       value: item.id.toString(),
     }));
     setItems(newResult);
-    // do same for payment status
-    const result1 = await db.getAllAsync<PaymentStatus>(
-      `SELECT * FROM PaymentStatus`
-    );
-    const newResult1 = result1.map((item) => ({
-      label: item.status,
-      value: item.id.toString(),
-    }));
-    setPaymentStatus(newResult1);
 
     // get the data from the `Sales` TBL with the help of param sales_id
     // set the value to the form fields.
