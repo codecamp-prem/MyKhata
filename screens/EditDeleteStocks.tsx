@@ -143,7 +143,7 @@ function EditDeleteStocks() {
                 cost_per_unit = ?
               WHERE id = ?;
             `,
-            [billNo, parseInt(itemId), quantity, cost_per_unit, param_stockId]
+            [billNo, itemId, quantity, cost_per_unit, param_stockId]
           );
         });
         Alert.alert("Stock Updated Successfully.");

@@ -21,7 +21,7 @@ export function getNepaliMonth() {
   // Get the current day date will be converted to Nepali date
   const nepaliDateObj = new NepaliDate();
   let nepaliMonth = nepaliDateObj.getMonth() + 1;
-  return nepaliMonth < 10 ? "0" + nepaliMonth : nepaliMonth;
+  return nepaliMonth < 10 ? "0" + nepaliMonth : nepaliMonth.toString();
 }
 export function getNepaliGatey() {
   // Get the current day date will be converted to Nepali date

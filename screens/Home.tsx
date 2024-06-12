@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, Text, TextStyle } from "react-native";
 import HomeScreenMenu from "../components/HomeScreenMenu";
 import Card from "../components/ui/Card";
 import { TransactionsByMonth } from "../types";
+import { getNepaliMonth, getNepaliYear } from "../utils/nepaliDate";
 
 export default function Home() {
   const navigation = useNavigation();
@@ -30,27 +31,40 @@ export default function Home() {
       //console.log(getMonthStartEndDates());
       let total_cost_of_cur_month = 0;
       let total_sales_of_cur_month = 0;
+      const firstDayCurrentMonth = 1;
+      const lastDayCurrentMonth = 32;
+      const currentNepaliMonth = getNepaliMonth();
+      const currentNepaliYear = getNepaliYear();
 
-      const { startDate, endDate } = getMonthStartEndDates();
-
-      // Get Stocks Total for this month(both pending and paid)
+      // Get Stocks Total for this month
       const query = `
         SELECT SUM(cost_per_unit * quantity) as total_cost
         FROM Stocks
-        WHERE billed_date BETWEEN ? AND ?
+        WHERE purchase_date_year = ? AND purchase_date_month = ? AND purchase_date_gatey BETWEEN ? AND ?
       `;
-      const stocks = await db.getAllAsync<any>(query, [startDate, endDate]);
-
-      // Get Sales Total for this month(both pending and paid)
-      const query1 = `
-        SELECT SUM(sales_total) as total_sales
-        FROM Sales
-        WHERE sales_date BETWEEN ? AND ?
-      `;
-      const sales = await db.getAllAsync<any>(query1, [startDate, endDate]);
+      const stocks = await db.getAllAsync<any>(query, [
+        parseInt(currentNepaliYear),
+        parseInt(currentNepaliMonth),
+        firstDayCurrentMonth,
+        lastDayCurrentMonth,
+      ]);
       if (stocks != null) {
         total_cost_of_cur_month = stocks[0].total_cost;
       }
+
+      // Get Sales Total for this month
+      const query1 = `
+      SELECT SUM(sales_total) as total_sales
+      FROM Sales
+      WHERE sales_date_year = ? AND sales_date_month = ? AND sales_date_gatey BETWEEN ? AND ?
+    `;
+      const sales = await db.getAllAsync<any>(query1, [
+        parseInt(currentNepaliYear),
+        parseInt(currentNepaliMonth),
+        firstDayCurrentMonth,
+        lastDayCurrentMonth,
+      ]);
+
       if (sales != null) {
         total_sales_of_cur_month = sales[0].total_sales;
       }
@@ -72,34 +86,6 @@ export default function Home() {
       <HomeScreenMenu navigation={navigation} />
     </ScrollView>
   );
-}
-function getMonthStartEndDates() {
-  // Get the current date
-  const currentDate = new Date();
-
-  // Get the start of the current month
-  const startDate = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    1
-  );
-  const startDateString = startDate
-    .toISOString()
-    .slice(0, 19)
-    .replace("T", " ");
-
-  // Get the end of the current month
-  const endDate = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0
-  );
-  const endDateString = endDate.toISOString().slice(0, 19).replace("T", " ");
-
-  return {
-    startDate: startDateString,
-    endDate: endDateString,
-  };
 }
 
 function TransactionSummary({
