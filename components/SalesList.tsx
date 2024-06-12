@@ -24,10 +24,12 @@ const SalesList = ({
             }
           >
             <Card style={styles.container}>
-              <Text style={styles.category_name}>{item.payment_status}</Text>
+              <Text style={styles.category_name}>
+                {item.sales_date_year}-{item.sales_date_month}-
+                {item.sales_date_gatey}
+              </Text>
               <Text>
-                {item.sales_date.split(" ")[0]} {item.item_name} Rs.
-                {item.sales_total}
+                {item.item_name} ({item.quantity} ओटा) रु{item.sales_total}
               </Text>
             </Card>
           </TouchableOpacity>

@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   Alert,
   Button,
@@ -11,24 +11,27 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Items, PaymentStatus, SalesListAddProps } from "../types";
+import { Items, SalesListAddProps } from "../types";
+import {
+  getNepaliGatey,
+  getNepaliMonth,
+  getNepaliYear,
+} from "../utils/nepaliDate";
 
 function AddItems() {
   const navigation = useNavigation();
   const db = useSQLiteContext();
 
+  const [billNo, setBillNo] = useState("");
   const [itemValue, setItemValue] = useState("");
+  const sales_date_year = useRef(getNepaliYear());
+  const sales_date_month = useRef(getNepaliMonth());
+  const sales_date_gatey = useRef(getNepaliGatey());
   const [quantity, setQuantity] = useState("");
-  const [sales_status, setSalesStatus] = useState("");
   const [sales_total, setSalesTotal] = useState("");
-  const [name, setSalesCustomer] = useState("");
 
   const [openItemPicker, setItemPicker] = useState(false);
   const [items, setItems] = useState([{ label: "Select Item", value: "0" }]);
-  const [openPayStatusPicker, setPayStatusPicker] = useState(false);
-  const [payment_status, setPaymentStatus] = useState([
-    { label: "Select Payment Status", value: "0" },
-  ]);
 
   const [errors, setErrors] = useState<SalesListAddProps | undefined>();
 
@@ -45,36 +48,27 @@ function AddItems() {
       value: item.id.toString(),
     }));
     setItems(newResult);
-    // do same for payment status
-    const result1 = await db.getAllAsync<PaymentStatus>(
-      `SELECT * FROM PaymentStatus`
-    );
-
-    const newResult1 = result1.map((item) => ({
-      label: item.status,
-      value: item.id.toString(),
-    }));
-
-    setPaymentStatus(newResult1);
   }
 
   const validate = () => {
     let isValid = true;
 
-    if (!itemValue.trim()) {
-      setErrors({ item_id: "Item is required" });
-      isValid = false;
-    }
-    if (!quantity.trim()) {
-      setErrors({ quantity: "Item Quantity is required" });
-      isValid = false;
-    }
     if (!sales_total.trim()) {
       setErrors({ sales_total: "Sales total is required" });
       isValid = false;
     }
-    if (!sales_status.trim()) {
-      setErrors({ sales_status: "Sales Status is required" });
+
+    if (!quantity.trim()) {
+      setErrors({ quantity: "Item Quantity is required" });
+      isValid = false;
+    }
+
+    if (!itemValue.trim()) {
+      setErrors({ item_id: "Item is required" });
+      isValid = false;
+    }
+    if (!billNo.trim()) {
+      setErrors({ bill_no: "Bill no. is required" });
       isValid = false;
     }
     return isValid;
@@ -87,15 +81,25 @@ function AddItems() {
           await db.runAsync(
             `
               INSERT INTO Sales (
+                bill_no,
                 item_id,
+                sales_date_year,
+                sales_date_month,
+                sales_date_gatey,
                 quantity,
-                sales_total,
-                sales_status,
-                customer_name
+                sales_total
               )
-              VALUES (?, ?, ?, ?, ?);
+              VALUES (?, ?, ?, ?, ?, ?, ?);
             `,
-            [parseInt(itemValue), quantity, sales_total, sales_status, name]
+            [
+              billNo,
+              itemValue,
+              sales_date_year.current,
+              sales_date_month.current,
+              sales_date_gatey.current,
+              quantity,
+              sales_total,
+            ]
           );
         });
         Alert.alert("Item Added Successfully.");
@@ -115,6 +119,19 @@ function AddItems() {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
+        <Text style={styles.label}>Sales Bill No.:</Text>
+        <TextInput
+          style={styles.input}
+          value={billNo}
+          onChangeText={setBillNo}
+          placeholder="Enter Bill no."
+          keyboardType="numeric"
+        />
+        {errors?.bill_no && (
+          <Text style={styles.errorText}>{errors.bill_no}</Text>
+        )}
+      </View>
+      <View style={styles.inputContainer}>
         <Text style={styles.label}>Sales Item:</Text>
         <DropDownPicker
           open={openItemPicker}
@@ -130,7 +147,12 @@ function AddItems() {
           <Text style={styles.errorText}>{errors.item_id}</Text>
         )}
       </View>
-
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
+          Sold Date:{sales_date_year.current}-{sales_date_month.current}-
+          {sales_date_gatey.current}
+        </Text>
+      </View>
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Sales Quantity:</Text>
         <TextInput
@@ -158,29 +180,7 @@ function AddItems() {
           <Text style={styles.errorText}>{errors.sales_total}</Text>
         )}
       </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sales Status:</Text>
-        <DropDownPicker
-          open={openPayStatusPicker}
-          value={sales_status}
-          items={payment_status}
-          setOpen={setPayStatusPicker}
-          setValue={setSalesStatus}
-          setItems={setPaymentStatus}
-        />
-        {errors?.sales_status && (
-          <Text style={styles.errorText}>{errors.sales_status}</Text>
-        )}
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sold to:</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setSalesCustomer}
-          placeholder="Enter Customer Name/Number(optional)"
-        />
-      </View>
+
       <Button title="Add Sales" onPress={handleSubmit} />
     </View>
   );

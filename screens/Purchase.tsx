@@ -28,10 +28,10 @@ const Purchase = () => {
 
   async function getItemsData() {
     const result =
-      await db.getAllAsync<StockListProps>(`SELECT s.*, i.name as item_name, z.status as payment_status
+      await db.getAllAsync<StockListProps>(`SELECT s.*, i.name as item_name, 
     FROM Stocks s
     JOIN Items i ON s.item_id = i.id
-    JOIN PaymentStatus z ON s.payment_status = z.id  ORDER BY s.billed_date DESC`);
+    ORDER BY s.id DESC`);
     setItems(result);
   }
 

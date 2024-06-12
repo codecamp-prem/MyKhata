@@ -24,10 +24,13 @@ const StocksList = ({
             }
           >
             <Card style={styles.container}>
-              <Text style={styles.category_name}>{stock.payment_status}</Text>
+              <Text style={styles.category_name}>
+                {stock.purchase_date_year}-{stock.purchase_date_month}-
+                {stock.purchase_date_gatey}
+              </Text>
               <Text>
-                {stock.billed_date.split(" ")[0]} {stock.item_name} (
-                {stock.quantity} * {stock.cost_per_unit}) = रु
+                {stock.item_name} ({stock.quantity}ओटा * {stock.cost_per_unit}{" "}
+                प्रति गोटा) = रु
                 {stock.cost_per_unit * stock.quantity}
               </Text>
             </Card>

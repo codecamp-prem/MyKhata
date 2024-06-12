@@ -1,6 +1,6 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   Alert,
   Keyboard,
@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Items, PaymentStatus, Sales, SalesListAddProps } from "../types";
+import { Items, Sales, SalesListAddProps } from "../types";
 
 function EditDeleteSales() {
   const navigation = useNavigation();
@@ -33,19 +33,16 @@ function EditDeleteSales() {
 
   const db = useSQLiteContext();
 
+  const [billNo, setBillNo] = useState("");
   const [itemValue, setItemValue] = useState("");
+  const sales_date_year = useRef("");
+  const sales_date_month = useRef("");
+  const sales_date_gatey = useRef("");
   const [quantity, setQuantity] = useState("");
-  const [sales_status, setSalesStatus] = useState("");
   const [sales_total, setSalesTotal] = useState("");
-  const [name, setSalesCustomer] = useState("");
-  const [sales_date, setSalesDate] = useState("");
 
   const [openItemPicker, setItemPicker] = useState(false);
   const [items, setItems] = useState([{ label: "Select Item", value: "0" }]);
-  const [openPayStatusPicker, setPayStatusPicker] = useState(false);
-  const [payment_status, setPaymentStatus] = useState([
-    { label: "Select Payment Status", value: "0" },
-  ]);
 
   const [errors, setErrors] = useState<SalesListAddProps | undefined>();
 
@@ -62,15 +59,6 @@ function EditDeleteSales() {
       value: item.id.toString(),
     }));
     setItems(newResult);
-    // do same for payment status
-    const result1 = await db.getAllAsync<PaymentStatus>(
-      `SELECT * FROM PaymentStatus`
-    );
-    const newResult1 = result1.map((item) => ({
-      label: item.status,
-      value: item.id.toString(),
-    }));
-    setPaymentStatus(newResult1);
 
     // get the data from the `Sales` TBL with the help of param sales_id
     // set the value to the form fields.
@@ -78,12 +66,17 @@ function EditDeleteSales() {
       `SELECT * FROM Sales WHERE id = ?`,
       param_salesId
     );
+
+    setBillNo(sales_details_from_id[0].bill_no.toString());
     setItemValue(sales_details_from_id[0].item_id.toString());
+    sales_date_year.current =
+      sales_details_from_id[0].sales_date_year.toString();
+    sales_date_month.current =
+      sales_details_from_id[0].sales_date_month.toString();
+    sales_date_gatey.current =
+      sales_details_from_id[0].sales_date_gatey.toString();
     setQuantity(sales_details_from_id[0].quantity.toString());
     setSalesTotal(sales_details_from_id[0].sales_total.toString());
-    setSalesStatus(sales_details_from_id[0].sales_status.toString());
-    setSalesCustomer(sales_details_from_id[0].customer_name!);
-    setSalesDate(sales_details_from_id[0].sales_date!);
   }
 
   async function deleteItem(id: number) {
@@ -116,22 +109,25 @@ function EditDeleteSales() {
   const validate = () => {
     let isValid = true;
 
-    if (!sales_status.trim()) {
-      setErrors({ sales_status: "Sales Status is required" });
-      isValid = false;
-    }
     if (!sales_total.trim()) {
       setErrors({ sales_total: "Sales total is required" });
       isValid = false;
     }
+
     if (!quantity.trim()) {
       setErrors({ quantity: "Item Quantity is required" });
       isValid = false;
     }
+
     if (!itemValue.trim()) {
       setErrors({ item_id: "Item is required" });
       isValid = false;
     }
+    if (!billNo.trim()) {
+      setErrors({ bill_no: "Bill no. is required" });
+      isValid = false;
+    }
+
     return isValid;
   };
   const handleSubmit = async () => {
@@ -143,21 +139,13 @@ function EditDeleteSales() {
             `
               UPDATE Sales
               SET
+                bill_no = ?,
+                item_id = ?,
                 quantity = ?,
-                sales_total = ?,
-                sales_status = ?,
-                customer_name = ?,
-                item_id = ?
+                sales_total = ?
               WHERE id = ?;
             `,
-            [
-              quantity,
-              sales_total,
-              sales_status,
-              name,
-              parseInt(itemValue),
-              param_salesId,
-            ]
+            [billNo, itemValue, quantity, sales_total, param_salesId]
           );
         });
         Alert.alert("Item Updated Successfully.");
@@ -176,6 +164,19 @@ function EditDeleteSales() {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
+        <Text style={styles.label}>Sales Bill No.:</Text>
+        <TextInput
+          style={styles.input}
+          value={billNo}
+          onChangeText={setBillNo}
+          placeholder="Enter Bill no."
+          keyboardType="numeric"
+        />
+        {errors?.bill_no && (
+          <Text style={styles.errorText}>{errors.bill_no}</Text>
+        )}
+      </View>
+      <View style={styles.inputContainer}>
         <Text style={styles.label}>Sales Item:</Text>
         <DropDownPicker
           open={openItemPicker}
@@ -191,9 +192,14 @@ function EditDeleteSales() {
           <Text style={styles.errorText}>{errors.item_id}</Text>
         )}
       </View>
-
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sales Quantity:</Text>
+        <Text style={styles.label}>
+          Sold Date:{sales_date_year.current}-{sales_date_month.current}-
+          {sales_date_gatey.current}
+        </Text>
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Sales Quantity: {quantity}wtf</Text>
         <TextInput
           style={styles.input}
           value={quantity}
@@ -218,32 +224,6 @@ function EditDeleteSales() {
         {errors?.sales_total && (
           <Text style={styles.errorText}>{errors.sales_total}</Text>
         )}
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sales Status:</Text>
-        <DropDownPicker
-          open={openPayStatusPicker}
-          value={sales_status}
-          items={payment_status}
-          setOpen={setPayStatusPicker}
-          setValue={setSalesStatus}
-          setItems={setPaymentStatus}
-        />
-        {errors?.sales_status && (
-          <Text style={styles.errorText}>{errors.sales_status}</Text>
-        )}
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sold Date: {sales_date}</Text>
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Sold to:</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setSalesCustomer}
-          placeholder="Enter Customer Name/Number(optional)"
-        />
       </View>
       <View style={styles.buttonGroup}>
         <Pressable

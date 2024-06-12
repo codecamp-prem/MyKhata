@@ -13,21 +13,23 @@ export interface PaymentStatus {
 }
 export interface Sales {
   id: number;
+  bill_no: number;
   item_id: number;
+  sales_date_year: number;
+  sales_date_month: number;
+  sales_date_gatey: number;
   quantity: number;
   sales_total: number;
-  sales_status: number;
-  customer_name?: string;
-  sales_date?: string;
 }
 export interface Stocks {
   id: number;
+  bill_no: number;
   item_id: number;
+  purchase_date_year: number;
+  purchase_date_month: number;
+  purchase_date_gatey: number;
   quantity: number;
   cost_per_unit: number;
-  payment_status: number;
-  supplier_name?: string;
-  billed_date?: string;
 }
 
 export interface TransactionsByMonth {
@@ -47,36 +49,41 @@ export type ItemsListAddProps = {
 };
 export type SalesListProps = {
   id: number;
+  bill_no: number;
   item_id: number;
+  sales_date_year: number;
+  sales_date_month: number;
+  sales_date_gatey: number;
   quantity: number;
-  sales_date: string;
-  sales_status: number;
   sales_total: number;
-  name: string;
   item_name: string;
-  payment_status: string;
 };
 export type SalesListAddProps = {
+  bill_no?: string;
   item_id?: string;
+  sales_date_year?: string;
+  sales_date_month?: string;
+  sales_date_gatey?: string;
   quantity?: string;
-  sales_status?: string;
   sales_total?: string;
-  name?: string;
 };
 export type StockListProps = {
   id: number;
+  bill_no: number;
   item_id: number;
-  billed_date: string;
+  purchase_date_year: number;
+  purchase_date_month: number;
+  purchase_date_gatey: number;
   quantity: number;
   cost_per_unit: number;
-  payment_status: string;
-  supplier_name: string;
   item_name: string;
 };
 export type StockListAddProps = {
+  bill_no?: string;
   item_id?: string;
+  purchase_date_year?: string;
+  purchase_date_month?: string;
+  purchase_date_gatey?: string;
   quantity?: string;
   cost_per_unit?: string;
-  payment_status?: string;
-  supplier_name?: string;
 };

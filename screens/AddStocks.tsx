@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   Alert,
   Button,
@@ -11,24 +11,27 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Items, PaymentStatus, StockListAddProps } from "../types";
+import { Items, StockListAddProps } from "../types";
+import {
+  getNepaliGatey,
+  getNepaliMonth,
+  getNepaliYear,
+} from "../utils/nepaliDate";
 
 function AddStocks() {
   const navigation = useNavigation();
   const db = useSQLiteContext();
 
+  const [billNo, setBillNo] = useState("");
   const [itemId, setItemID] = useState("");
+  const purchase_date_year = useRef(getNepaliYear());
+  const purchase_date_month = useRef(getNepaliMonth());
+  const purchase_date_gatey = useRef(getNepaliGatey());
   const [quantity, setQuantity] = useState("");
-  const [payment_status, setSalesStatus] = useState("");
   const [cost_per_unit, setSalesTotal] = useState("");
-  const [supplier_name, setSalesCustomer] = useState("");
 
   const [openItemPicker, setItemPicker] = useState(false);
   const [items, setItems] = useState([{ label: "Select Item", value: "0" }]);
-  const [openPayStatusPicker, setPayStatusPicker] = useState(false);
-  const [tbl_payment_status, setPaymentStatus] = useState([
-    { label: "Select Payment Status", value: "0" },
-  ]);
 
   const [errors, setErrors] = useState<StockListAddProps | undefined>();
 
@@ -45,38 +48,28 @@ function AddStocks() {
       value: item.id.toString(),
     }));
     setItems(newResult);
-    // do same for payment status
-    const result1 = await db.getAllAsync<PaymentStatus>(
-      `SELECT * FROM PaymentStatus`
-    );
-
-    const newResult1 = result1.map((item) => ({
-      label: item.status,
-      value: item.id.toString(),
-    }));
-
-    setPaymentStatus(newResult1);
   }
 
   const validate = () => {
     let isValid = true;
 
-    if (!itemId.trim()) {
-      setErrors({ item_id: "Item is required" });
+    if (!cost_per_unit.trim()) {
+      setErrors({ cost_per_unit: "Cost Per Unit is required" });
       isValid = false;
     }
     if (!quantity.trim()) {
       setErrors({ quantity: "Item Quantity is required" });
       isValid = false;
     }
-    if (!cost_per_unit.trim()) {
-      setErrors({ cost_per_unit: "Cost Per Unit is required" });
+    if (!itemId.trim()) {
+      setErrors({ item_id: "Item is required" });
       isValid = false;
     }
-    if (!payment_status.trim()) {
-      setErrors({ payment_status: "Payment Status is required" });
+    if (!billNo.trim()) {
+      setErrors({ bill_no: "Purchase Bill No. is required" });
       isValid = false;
     }
+
     return isValid;
   };
   const handleSubmit = async () => {
@@ -87,20 +80,24 @@ function AddStocks() {
           await db.runAsync(
             `
               INSERT INTO Stocks (
+                bill_no,
                 item_id,
+                purchase_date_year,
+                purchase_date_month,
+                purchase_date_gatey,
                 quantity,
-                cost_per_unit,
-                payment_status,
-                supplier_name
+                cost_per_unit
               )
-              VALUES (?, ?, ?, ?, ?);
+              VALUES (?, ?, ?, ?, ?, ?, ?);
             `,
             [
-              parseInt(itemId),
+              billNo,
+              itemId,
+              purchase_date_year.current,
+              purchase_date_month.current,
+              purchase_date_gatey.current,
               quantity,
               cost_per_unit,
-              payment_status,
-              supplier_name,
             ]
           );
         });
@@ -122,6 +119,18 @@ function AddStocks() {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
+        <Text style={styles.label}>Purchase Bill No.:</Text>
+        <TextInput
+          style={styles.input}
+          value={billNo}
+          onChangeText={setBillNo}
+          placeholder="Enter Purchase Bill No."
+        />
+        {errors?.bill_no && (
+          <Text style={styles.errorText}>{errors.bill_no}</Text>
+        )}
+      </View>
+      <View style={styles.inputContainer}>
         <Text style={styles.label}>Stock Item:</Text>
         <DropDownPicker
           open={openItemPicker}
@@ -137,7 +146,12 @@ function AddStocks() {
           <Text style={styles.errorText}>{errors.item_id}</Text>
         )}
       </View>
-
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
+          Purchase Date: {purchase_date_year.current}-
+          {purchase_date_month.current}-{purchase_date_gatey.current}
+        </Text>
+      </View>
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Stock Quantity:</Text>
         <TextInput
@@ -165,29 +179,7 @@ function AddStocks() {
           <Text style={styles.errorText}>{errors.cost_per_unit}</Text>
         )}
       </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Payment Status:</Text>
-        <DropDownPicker
-          open={openPayStatusPicker}
-          value={payment_status}
-          items={tbl_payment_status}
-          setOpen={setPayStatusPicker}
-          setValue={setSalesStatus}
-          setItems={setPaymentStatus}
-        />
-        {errors?.payment_status && (
-          <Text style={styles.errorText}>{errors.payment_status}</Text>
-        )}
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Supplier Name:</Text>
-        <TextInput
-          style={styles.input}
-          value={supplier_name}
-          onChangeText={setSalesCustomer}
-          placeholder="Enter Supplier Name/Number(optional)"
-        />
-      </View>
+
       <Button title="Add Stock" onPress={handleSubmit} />
     </View>
   );

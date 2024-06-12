@@ -1,6 +1,6 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   Alert,
   Keyboard,
@@ -33,12 +33,13 @@ function EditDeleteStocks() {
 
   const db = useSQLiteContext();
 
+  const [billNo, setBillNo] = useState("");
   const [itemId, setItemID] = useState("");
+  const purchase_date_year = useRef("");
+  const purchase_date_month = useRef("");
+  const purchase_date_gatey = useRef("");
   const [quantity, setQuantity] = useState("");
-  const [payment_status, setSalesStatus] = useState("");
   const [cost_per_unit, setSalesTotal] = useState("");
-  const [supplier_name, setSalesCustomer] = useState("");
-  const [sales_date, setSalesDate] = useState("");
 
   const [openItemPicker, setItemPicker] = useState(false);
   const [items, setItems] = useState([{ label: "Select Item", value: "0" }]);
@@ -78,12 +79,16 @@ function EditDeleteStocks() {
       `SELECT * FROM Stocks WHERE id = ?`,
       param_stockId
     );
+    setBillNo(stocks_details_from_id[0].bill_no.toString());
     setItemID(stocks_details_from_id[0].item_id.toString());
+    purchase_date_year.current =
+      stocks_details_from_id[0].purchase_date_year.toString();
+    purchase_date_month.current =
+      stocks_details_from_id[0].purchase_date_month.toString();
+    purchase_date_gatey.current =
+      stocks_details_from_id[0].purchase_date_gatey.toString();
     setQuantity(stocks_details_from_id[0].quantity.toString());
     setSalesTotal(stocks_details_from_id[0].cost_per_unit.toString());
-    setSalesStatus(stocks_details_from_id[0].payment_status.toString());
-    setSalesCustomer(stocks_details_from_id[0].supplier_name!);
-    setSalesDate(stocks_details_from_id[0].billed_date!);
     //console.log(sales_details_from_id);
   }
 
@@ -117,22 +122,23 @@ function EditDeleteStocks() {
   const validate = () => {
     let isValid = true;
 
-    if (!payment_status.trim()) {
-      setErrors({ payment_status: "Payment Status is required" });
-      isValid = false;
-    }
     if (!cost_per_unit.trim()) {
-      setErrors({ cost_per_unit: "Stock cost per unit is required" });
+      setErrors({ cost_per_unit: "Cost Per Unit is required" });
       isValid = false;
     }
     if (!quantity.trim()) {
-      setErrors({ quantity: "Stock Quantity is required" });
+      setErrors({ quantity: "Item Quantity is required" });
       isValid = false;
     }
     if (!itemId.trim()) {
       setErrors({ item_id: "Item is required" });
       isValid = false;
     }
+    if (!billNo.trim()) {
+      setErrors({ bill_no: "Purchase Bill No. is required" });
+      isValid = false;
+    }
+
     return isValid;
   };
   const handleSubmit = async () => {
@@ -144,21 +150,13 @@ function EditDeleteStocks() {
             `
               UPDATE Stocks
               SET
+                bill_no = ?,
                 item_id = ?,
                 quantity = ?,
-                cost_per_unit = ?,
-                payment_status = ?,
-                supplier_name = ?
+                cost_per_unit = ?
               WHERE id = ?;
             `,
-            [
-              parseInt(itemId),
-              quantity,
-              cost_per_unit,
-              payment_status,
-              supplier_name,
-              param_stockId,
-            ]
+            [billNo, parseInt(itemId), quantity, cost_per_unit, param_stockId]
           );
         });
         Alert.alert("Stock Updated Successfully.");
@@ -177,6 +175,18 @@ function EditDeleteStocks() {
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
+        <Text style={styles.label}>Purchase Bill No.:</Text>
+        <TextInput
+          style={styles.input}
+          value={billNo}
+          onChangeText={setBillNo}
+          placeholder="Enter Purchase Bill No."
+        />
+        {errors?.bill_no && (
+          <Text style={styles.errorText}>{errors.bill_no}</Text>
+        )}
+      </View>
+      <View style={styles.inputContainer}>
         <Text style={styles.label}>Stock Item:</Text>
         <DropDownPicker
           open={openItemPicker}
@@ -192,7 +202,12 @@ function EditDeleteStocks() {
           <Text style={styles.errorText}>{errors.item_id}</Text>
         )}
       </View>
-
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
+          Purchase Date: {purchase_date_year.current}-
+          {purchase_date_month.current}-{purchase_date_gatey.current}
+        </Text>
+      </View>
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Stock Quantity:</Text>
         <TextInput
@@ -219,32 +234,6 @@ function EditDeleteStocks() {
         {errors?.cost_per_unit && (
           <Text style={styles.errorText}>{errors.cost_per_unit}</Text>
         )}
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Payment Status:</Text>
-        <DropDownPicker
-          open={openPayStatusPicker}
-          value={payment_status}
-          items={tbl_payment_status}
-          setOpen={setPayStatusPicker}
-          setValue={setSalesStatus}
-          setItems={setPaymentStatus}
-        />
-        {errors?.payment_status && (
-          <Text style={styles.errorText}>{errors.payment_status}</Text>
-        )}
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Purchase Date: {sales_date}</Text>
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Supplier Name:</Text>
-        <TextInput
-          style={styles.input}
-          value={supplier_name}
-          onChangeText={setSalesCustomer}
-          placeholder="Enter Supplier Name/Number(optional)"
-        />
       </View>
       <View style={styles.buttonGroup}>
         <Pressable
