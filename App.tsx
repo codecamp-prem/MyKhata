@@ -5,16 +5,15 @@ import * as FileSystem from "expo-file-system";
 import { SQLiteProvider } from "expo-sqlite";
 import { Suspense, useEffect, useState } from "react";
 import Loading from "./components/Loading";
-import AddCategory from "./screens/AddCategory";
 import AddItems from "./screens/AddItems";
 import AddSales from "./screens/AddSales";
 import AddStocks from "./screens/AddStocks";
-import Category from "./screens/Category";
 import EditDeleteSales from "./screens/EditDeleteSales";
 import EditDeleteStocks from "./screens/EditDeleteStocks";
 import Home from "./screens/Home";
 import Items from "./screens/Items";
 import Purchase from "./screens/Purchase";
+import Reports from "./screens/Reports";
 import Sales from "./screens/Sales";
 
 const Stack = createNativeStackNavigator();
@@ -57,18 +56,10 @@ export default function App() {
               options={{ headerTitle: "MyKhata-Home", headerLargeTitle: true }}
             />
             <Stack.Screen
-              name="Category"
-              component={Category}
+              name="Reports"
+              component={Reports}
               options={{
-                headerTitle: "MyKhata-Category",
-                headerLargeTitle: true,
-              }}
-            />
-            <Stack.Screen
-              name="AddCategory"
-              component={AddCategory}
-              options={{
-                headerTitle: "MyKhata- Add Category",
+                headerTitle: "MyKhata-Reports",
                 headerLargeTitle: true,
               }}
             />

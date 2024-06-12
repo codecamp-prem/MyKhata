@@ -6,13 +6,6 @@ const HomeScreenMenu = ({ navigation }: any) => {
   return (
     <View style={styles.featuresContainer}>
       <TouchableOpacity
-        onPress={() => navigation.navigate("Category")}
-        style={styles.featureBox}
-      >
-        <Ionicons name="stats-chart" size={50} color="#3498db" />
-        <Text style={styles.featureName}>Category</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
         onPress={() => navigation.navigate("Items")}
         style={styles.featureBox}
       >
@@ -32,6 +25,13 @@ const HomeScreenMenu = ({ navigation }: any) => {
       >
         <Feather name="package" size={50} color="#3498db" />
         <Text style={styles.featureName}>Stocks</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("Reports")}
+        style={styles.featureBox}
+      >
+        <Ionicons name="stats-chart" size={50} color="#3498db" />
+        <Text style={styles.featureName}>Report</Text>
       </TouchableOpacity>
     </View>
   );

@@ -3,10 +3,10 @@ import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
-import CategoriesList from "../components/CategoriesList";
+import CategoriesList from "../components/ReportList";
 import { Categories } from "../types";
 
-const Category = () => {
+const Reports = () => {
   const navigation = useNavigation();
 
   const [catergories, setCatergories] = useState<Categories[]>([]);
@@ -62,4 +62,4 @@ const Category = () => {
   );
 };
 
-export default Category;
+export default Reports;
