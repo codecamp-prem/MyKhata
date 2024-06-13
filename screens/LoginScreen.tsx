@@ -1,7 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import { StyleSheet } from "react-native";
-import BackButton from "../components/ui/BackButton";
 import Background from "../components/ui/Background";
 import Button from "../components/ui/Button";
 import Header from "../components/ui/Header";
@@ -27,10 +26,11 @@ export default function LoginScreen() {
 
   return (
     <Background>
-      <BackButton goBack={navigation.goBack} />
+      {/* <BackButton goBack={navigation.goBack} /> */}
       <Logo />
       <Header>Welcome back.</Header>
       <TextInput
+        placeholder="Enter Your Password"
         aria-label="Password"
         returnKeyType="done"
         value={password.value}
