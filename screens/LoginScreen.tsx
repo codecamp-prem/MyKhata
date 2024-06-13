@@ -20,7 +20,7 @@ export default function LoginScreen() {
     }
     navigation.reset({
       index: 0,
-      routes: [{ name: "Dashboard" } as never],
+      routes: [{ name: "Home" } as never],
     });
   };
 

@@ -50,15 +50,11 @@ export default function App() {
     <NavigationContainer>
       <Suspense fallback={<Loading />}>
         <SQLiteProvider databaseName="MyKhataAppSqlite.db" useSuspense>
-          <Stack.Navigator>
-            <Stack.Screen
-              name="LoginScreen"
-              component={LoginScreen}
-              options={{
-                headerTitle: "MyKhata-Login",
-                headerLargeTitle: true,
-              }}
-            />
+          <Stack.Navigator
+            initialRouteName="LoginScreen"
+            screenOptions={{ headerShown: true }}
+          >
+            <Stack.Screen name="LoginScreen" component={LoginScreen} />
             <Stack.Screen
               name="Home"
               component={Home}
