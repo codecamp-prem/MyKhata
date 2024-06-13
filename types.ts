@@ -39,6 +39,14 @@ export interface TransactionsByMonth {
   currentNepaliMonth: string;
 }
 
+export type InStockListProps = {
+  item_id: number;
+  name: string;
+  all_total_sales: number;
+  all_total_stocks: number;
+  total_quantity_remain_in_stock: number;
+};
+
 export type ItemsListProps = {
   category_id: number;
   category_name: String;
