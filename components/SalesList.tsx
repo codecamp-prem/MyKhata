@@ -25,8 +25,11 @@ const SalesList = ({
           >
             <Card style={styles.container}>
               <Text style={styles.category_name}>
-                {item.sales_date_year}-{item.sales_date_month}-
-                {item.sales_date_gatey}
+                {item.sales_date_year}-
+                {item.sales_date_month < 10
+                  ? "0" + item.sales_date_month
+                  : item.sales_date_month}
+                -{item.sales_date_gatey}
               </Text>
               <Text>
                 {item.item_name} ({item.quantity} ओटा) रु{item.sales_total}
@@ -46,7 +49,8 @@ const styles = StyleSheet.create({
     // Add other container styles as necessary
   },
   category_name: {
-    fontSize: 10,
+    fontSize: 13,
+    fontWeight: "bold",
   },
 });
 

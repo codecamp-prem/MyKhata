@@ -25,8 +25,11 @@ const StocksList = ({
           >
             <Card style={styles.container}>
               <Text style={styles.category_name}>
-                {stock.purchase_date_year}-{stock.purchase_date_month}-
-                {stock.purchase_date_gatey}
+                {stock.purchase_date_year}-
+                {stock.purchase_date_month < 10
+                  ? "0" + stock.purchase_date_month
+                  : stock.purchase_date_month}
+                -{stock.purchase_date_gatey}
               </Text>
               <Text>
                 {stock.item_name} ({stock.quantity}ओटा * {stock.cost_per_unit}{" "}
@@ -48,7 +51,8 @@ const styles = StyleSheet.create({
     // Add other container styles as necessary
   },
   category_name: {
-    fontSize: 10,
+    fontSize: 13,
+    fontWeight: "bold",
   },
 });
 
