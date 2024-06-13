@@ -35,6 +35,8 @@ export interface Stocks {
 export interface TransactionsByMonth {
   totalExpenses: number;
   totalIncome: number;
+  currentNepaliYear: string;
+  currentNepaliMonth: string;
 }
 
 export type ItemsListProps = {

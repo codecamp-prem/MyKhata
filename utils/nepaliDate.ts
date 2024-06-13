@@ -28,3 +28,21 @@ export function getNepaliGatey() {
   const nepaliDateObj = new NepaliDate();
   return nepaliDateObj.getDate().toString();
 }
+
+export function getFullNepaliMonth(strNumericNepaliMonth: string): string {
+  const nepaliFullMonthsObj: { [key: string]: string } = {
+    "01": "Baisakh",
+    "02": "Jestha",
+    "03": "Asar",
+    "04": "Shrawan",
+    "05": "Bhadra",
+    "06": "Aswin",
+    "07": "Kartik",
+    "08": "Mangsir",
+    "09": "Poush",
+    "10": "Magh",
+    "11": "Falgun",
+    "12": "Chaitra",
+  };
+  return nepaliFullMonthsObj[strNumericNepaliMonth];
+}

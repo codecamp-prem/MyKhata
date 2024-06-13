@@ -1,18 +1,27 @@
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextStyle } from "react-native";
 import HomeScreenMenu from "../components/HomeScreenMenu";
 import Card from "../components/ui/Card";
 import { TransactionsByMonth } from "../types";
-import { getNepaliMonth, getNepaliYear } from "../utils/nepaliDate";
+import {
+  getFullNepaliMonth,
+  getNepaliMonth,
+  getNepaliYear,
+} from "../utils/nepaliDate";
 
 export default function Home() {
   const navigation = useNavigation();
+  const currentNepaliMonth = useRef(getNepaliMonth());
+  const currentNepaliYear = useRef(getNepaliYear());
+
   const [transactionsByMonth, setTransactionsByMonth] =
     useState<TransactionsByMonth>({
       totalExpenses: 0,
       totalIncome: 0,
+      currentNepaliYear: currentNepaliYear.current,
+      currentNepaliMonth: currentNepaliMonth.current,
     });
 
   const db = useSQLiteContext();
@@ -33,8 +42,6 @@ export default function Home() {
       let total_sales_of_cur_month = 0;
       const firstDayCurrentMonth = 1;
       const lastDayCurrentMonth = 32;
-      const currentNepaliMonth = getNepaliMonth();
-      const currentNepaliYear = getNepaliYear();
 
       // Get Stocks Total for this month
       const query = `
@@ -43,8 +50,8 @@ export default function Home() {
         WHERE purchase_date_year = ? AND purchase_date_month = ? AND purchase_date_gatey BETWEEN ? AND ?
       `;
       const stocks = await db.getAllAsync<any>(query, [
-        parseInt(currentNepaliYear),
-        parseInt(currentNepaliMonth),
+        parseInt(currentNepaliYear.current),
+        parseInt(currentNepaliMonth.current),
         firstDayCurrentMonth,
         lastDayCurrentMonth,
       ]);
@@ -59,8 +66,8 @@ export default function Home() {
       WHERE sales_date_year = ? AND sales_date_month = ? AND sales_date_gatey BETWEEN ? AND ?
     `;
       const sales = await db.getAllAsync<any>(query1, [
-        parseInt(currentNepaliYear),
-        parseInt(currentNepaliMonth),
+        parseInt(currentNepaliYear.current),
+        parseInt(currentNepaliMonth.current),
         firstDayCurrentMonth,
         lastDayCurrentMonth,
       ]);
@@ -71,6 +78,8 @@ export default function Home() {
       setTransactionsByMonth({
         totalExpenses: total_cost_of_cur_month,
         totalIncome: total_sales_of_cur_month,
+        currentNepaliYear: currentNepaliYear.current,
+        currentNepaliMonth: currentNepaliMonth.current,
       });
     } catch (error) {
       console.error("Error executing the database query:", error);
@@ -82,6 +91,8 @@ export default function Home() {
       <TransactionSummary
         totalExpenses={transactionsByMonth.totalExpenses}
         totalIncome={transactionsByMonth.totalIncome}
+        currentNepaliYear={currentNepaliYear.current}
+        currentNepaliMonth={currentNepaliMonth.current}
       />
       <HomeScreenMenu navigation={navigation} />
     </ScrollView>
@@ -91,12 +102,17 @@ export default function Home() {
 function TransactionSummary({
   totalIncome,
   totalExpenses,
+  currentNepaliYear,
+  currentNepaliMonth,
 }: TransactionsByMonth) {
   const savings = totalIncome - totalExpenses;
-  const readablePeriod = new Date().toLocaleDateString("default", {
-    month: "long",
-    year: "numeric",
-  });
+  // const readablePeriod = new Date().toLocaleDateString("default", {
+  //   month: "long",
+  //   year: "numeric",
+  // });
+
+  const readablePeriod =
+    getFullNepaliMonth(currentNepaliMonth) + ", " + currentNepaliYear;
 
   // Function to determine the style based on the value (positive or negative)
   const getMoneyTextStyle = (value: number): TextStyle => ({
