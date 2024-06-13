@@ -1,7 +1,7 @@
 import { Entypo } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import StocksList from "../components/StocksList";
 import { StockListProps } from "../types";
@@ -12,28 +12,28 @@ const Purchase = () => {
 
   const db = useSQLiteContext();
 
+  const getItemsData = useCallback(async () => {
+    const result = await db.getAllAsync<StockListProps>(`
+    SELECT s.*, i.name as item_name 
+    FROM Stocks s
+    JOIN Items i ON s.item_id = i.id
+    ORDER BY s.id DESC
+    `);
+    setItems(result);
+  }, [db, setItems]);
+
   useEffect(() => {
+    // console.log("--- Purchase screen get called --");
     db.withTransactionAsync(async () => {
       await getItemsData();
     });
-  }, [db]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", async () => {
-      // console.log("--- stocks screen get called --");
-      await getItemsData();
-    });
-    return unsubscribe;
-  }, [navigation]);
+    const focusListener = navigation.addListener("focus", getItemsData);
 
-  async function getItemsData() {
-    const result =
-      await db.getAllAsync<StockListProps>(`SELECT s.*, i.name as item_name 
-    FROM Stocks s
-    JOIN Items i ON s.item_id = i.id
-    ORDER BY s.id DESC`);
-    setItems(result);
-  }
+    return () => {
+      focusListener(); // Unsubscribe the listener
+    };
+  }, [db, navigation, getItemsData]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 10 }}>

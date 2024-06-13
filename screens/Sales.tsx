@@ -1,7 +1,7 @@
 import { Entypo } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import SalesList from "../components/SalesList";
 import { SalesListProps } from "../types";
@@ -12,24 +12,28 @@ const Sales = () => {
 
   const db = useSQLiteContext();
 
+  const getItemsData = useCallback(async () => {
+    const result = await db.getAllAsync<SalesListProps>(`
+    SELECT s.*, i.name as item_name
+    FROM Sales s
+    JOIN Items i ON s.item_id = i.id
+    ORDER BY s.id DESC
+    `);
+    setItems(result);
+  }, [db, setItems]);
+
   useEffect(() => {
+    //console.log(" Sales screen get called");
     db.withTransactionAsync(async () => {
       await getItemsData();
     });
-    navigation.addListener("focus", async () => {
-      //console.log(" Sales screen get called");
-      await getItemsData();
-    });
-  }, [db, navigation]);
 
-  async function getItemsData() {
-    const result =
-      await db.getAllAsync<SalesListProps>(`SELECT s.*, i.name as item_name
-    FROM Sales s
-    JOIN Items i ON s.item_id = i.id
-    ORDER BY s.id DESC`);
-    setItems(result);
-  }
+    const focusListener = navigation.addListener("focus", getItemsData);
+
+    return () => {
+      focusListener(); // Unsubscribe the listener
+    };
+  }, [db, navigation, getItemsData]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 10 }}>
