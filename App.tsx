@@ -107,7 +107,7 @@ export default function App() {
               name="Stocks"
               component={Purchase}
               options={{
-                headerTitle: "MyKhata-Stocks",
+                headerTitle: "MyKhata-Purchase",
                 headerLargeTitle: true,
               }}
             />
@@ -115,7 +115,7 @@ export default function App() {
               name="AddStocks"
               component={AddStocks}
               options={{
-                headerTitle: "MyKhata- Add Stocks",
+                headerTitle: "MyKhata- Add Purchase",
                 headerLargeTitle: true,
               }}
             />
@@ -123,7 +123,7 @@ export default function App() {
               name="EditDeleteStocks"
               component={EditDeleteStocks}
               options={{
-                headerTitle: "MyKhata- Edit/Delete Stocks",
+                headerTitle: "MyKhata- Edit/Delete Purchase",
                 headerLargeTitle: true,
               }}
             />
