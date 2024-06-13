@@ -12,6 +12,7 @@ import EditDeleteSales from "./screens/EditDeleteSales";
 import EditDeleteStocks from "./screens/EditDeleteStocks";
 import Home from "./screens/Home";
 import Items from "./screens/Items";
+import LoginScreen from "./screens/LoginScreen";
 import Purchase from "./screens/Purchase";
 import Reports from "./screens/Reports";
 import Sales from "./screens/Sales";
@@ -50,6 +51,14 @@ export default function App() {
       <Suspense fallback={<Loading />}>
         <SQLiteProvider databaseName="MyKhataAppSqlite.db" useSuspense>
           <Stack.Navigator>
+            <Stack.Screen
+              name="LoginScreen"
+              component={LoginScreen}
+              options={{
+                headerTitle: "MyKhata-Login",
+                headerLargeTitle: true,
+              }}
+            />
             <Stack.Screen
               name="Home"
               component={Home}
