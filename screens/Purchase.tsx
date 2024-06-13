@@ -28,7 +28,7 @@ const Purchase = () => {
 
   async function getItemsData() {
     const result =
-      await db.getAllAsync<StockListProps>(`SELECT s.*, i.name as item_name, 
+      await db.getAllAsync<StockListProps>(`SELECT s.*, i.name as item_name 
     FROM Stocks s
     JOIN Items i ON s.item_id = i.id
     ORDER BY s.id DESC`);
