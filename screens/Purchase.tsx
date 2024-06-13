@@ -36,7 +36,9 @@ const Purchase = () => {
   }, [db, navigation, getItemsData]);
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 10 }}>
+    <ScrollView
+      contentContainerStyle={{ padding: 15, paddingVertical: 10, flex: 1 }}
+    >
       <StocksList allStocks={allStocks} navigation={navigation} />
       <TouchableOpacity
         style={{

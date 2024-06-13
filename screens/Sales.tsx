@@ -36,7 +36,13 @@ const Sales = () => {
   }, [db, navigation, getItemsData]);
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 10 }}>
+    <ScrollView
+      contentContainerStyle={{
+        padding: 15,
+        paddingVertical: 10,
+        flex: 1,
+      }}
+    >
       <SalesList allitems={allitems} navigation={navigation} />
       <TouchableOpacity
         style={{
