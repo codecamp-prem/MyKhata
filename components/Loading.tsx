@@ -1,23 +1,23 @@
-import { StyleSheet, Text, View } from "react-native";
+import * as React from "react";
+import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, MD2Colors } from "react-native-paper";
 
-const Loading = () => {
-  return (
-    <View style={styles.statusContainer}>
-      <Text style={styles.statusText}>Loading....</Text>
-    </View>
-  );
-};
+const Loading = () => (
+  <View style={styles.container}>
+    <ActivityIndicator
+      animating={true}
+      color={MD2Colors.red800}
+      size={"large"}
+    />
+  </View>
+);
 
 const styles = StyleSheet.create({
-  statusContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "white",
-    borderRadius: 5,
-  },
-  statusText: {
-    color: "#333",
-    textAlign: "center",
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
+
 export default Loading;
