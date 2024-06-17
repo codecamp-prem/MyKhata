@@ -3,19 +3,28 @@ import { useSQLiteContext } from "expo-sqlite";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
+import { PurchaseItem, SalesItem } from "../types";
 import { getNepaliMonth, getNepaliYear } from "../utils/nepaliDate";
 
 const Reports: React.FC = () => {
   const navigation = useNavigation();
   const db = useSQLiteContext();
 
+  const [reportResult, setReportResult] = useState();
+
   const currentNepaliMonth = useRef(getNepaliMonth());
   const currentNepaliYear = useRef(getNepaliYear());
 
   const [yearOpen, setYearOpen] = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [yearValue, setYearValue] = useState(currentNepaliYear.current);
   const [monthValue, setMonthValue] = useState(currentNepaliMonth.current);
+  const [reportTypeValue, setReportTypeValue] = useState("Sales");
+  const [itemsReportType, setItemsReportType] = useState([
+    { label: "Sales", value: "Sales" },
+    { label: "Purchase", value: "Stocks" },
+  ]);
   const [itemsYear, setItemsYear] = useState<
     { label: string; value: string }[]
   >([]);
@@ -36,10 +45,17 @@ const Reports: React.FC = () => {
 
   const onYearOpen = useCallback(() => {
     setMonthOpen(false);
+    setReportOpen(false);
   }, []);
 
   const onMonthOpen = useCallback(() => {
     setYearOpen(false);
+    setReportOpen(false);
+  }, []);
+
+  const onReportOpen = useCallback(() => {
+    setYearOpen(false);
+    setMonthOpen(false);
   }, []);
 
   // Get Years from Db : Starts Here
@@ -87,13 +103,60 @@ const Reports: React.FC = () => {
       focusListener(); // Unsubscribe the listener
     };
   }, [db, navigation, getAllYears]);
+
   // Get Years from Db : Ends Here
 
-  // Get queryResult from Sales and Stocks Tbl for Choosen Month and Year
+  const getReportData = useCallback(async () => {
+    // console.log(yearValue);
+    // console.log(monthValue);
+    // console.log(reportTypeValue);
+
+    const reportQuery = `SELECT s.*,
+        COALESCE(i.name, s.item_id || '(DeletedItem)') AS item_name,
+        '${reportTypeValue}' AS type,
+        ${
+          reportTypeValue === "Sales"
+            ? `SUM(s.sales_total) AS total_sales_for_this_month`
+            : `SUM(s.cost_per_unit * s.quantity) AS total_purchase_for_this_month`
+        }
+        FROM
+          ${reportTypeValue} s
+        LEFT JOIN
+         Items i
+        ON
+          s.item_id = i.id
+        WHERE
+          ${
+            reportTypeValue === "Sales"
+              ? `s.sales_date_year = ${yearValue} AND s.sales_date_month = ${monthValue}`
+              : `s.purchase_date_year = ${yearValue} AND s.purchase_date_month = ${monthValue}`
+          }
+        GROUP BY s.id`;
+
+    //console.log(reportQuery);
+
+    let reportResult: (SalesItem | PurchaseItem)[];
+    if (reportTypeValue === "Sales") {
+      reportResult = await db.getAllAsync<SalesItem>(reportQuery);
+    } else {
+      reportResult = await db.getAllAsync<PurchaseItem>(reportQuery);
+    }
+    console.log(reportResult);
+  }, [db, setReportResult, yearValue, monthValue, reportTypeValue]);
+
   useEffect(() => {
-    console.log("year: ", yearValue);
-    console.log("month: ", monthValue);
-  }, [db, navigation, yearValue, monthValue]);
+    db.withTransactionAsync(async () => {
+      await getReportData();
+    });
+    const focusListener = navigation.addListener("focus", getReportData);
+    return () => {
+      focusListener(); // Unsubscribe the listener
+    };
+  }, [db, navigation, getReportData, yearValue, monthValue, reportTypeValue]);
+
+  // Get queryResult from Sales OR Stocks Tbl for Choosen Month and Year
+
+  // Ends here: query for Reports
 
   return (
     <View style={styles.container}>
@@ -127,6 +190,21 @@ const Reports: React.FC = () => {
           containerStyle={styles.dropDownContainer}
           zIndex={2000}
           zIndexInverse={2000}
+        />
+        <DropDownPicker
+          open={reportOpen}
+          onOpen={onReportOpen}
+          value={reportTypeValue}
+          items={itemsReportType}
+          setOpen={setReportOpen}
+          setValue={setReportTypeValue}
+          setItems={setItemsReportType}
+          placeholder="Select Report Type"
+          style={styles.dropDown}
+          textStyle={styles.dropDownText}
+          containerStyle={styles.dropDownContainer}
+          zIndex={1000}
+          zIndexInverse={3000}
         />
       </View>
       <FlatList

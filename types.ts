@@ -97,3 +97,29 @@ export type StockListAddProps = {
   quantity?: string;
   cost_per_unit?: string;
 };
+
+export interface SalesItem {
+  id: number;
+  item_id: number;
+  item_name: string;
+  sales_date_year: number;
+  sales_date_month: number;
+  quantity: number;
+  price: number;
+  sales: number; // Defined the type for the sales column
+  type: string;
+  total_sales_for_this_month: number; // Added the type for the _for_this_month column
+}
+
+export interface PurchaseItem {
+  id: number;
+  item_id: number;
+  item_name: string;
+  purchase_date_year: number;
+  purchase_date_month: number;
+  quantity: number;
+  price: number;
+  stocks: number; // Defined the type for the stocks column
+  type: string;
+  total_purchase_for_this_month: number; // Added the type for the total_purchase_for_this_month column
+}
