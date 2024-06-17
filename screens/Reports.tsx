@@ -1,92 +1,145 @@
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import Card from "../components/ui/Card";
 import { getNepaliMonth, getNepaliYear } from "../utils/nepaliDate";
 
-const Reports = () => {
+const Reports: React.FC = () => {
   const navigation = useNavigation();
   const db = useSQLiteContext();
 
   const currentNepaliMonth = useRef(getNepaliMonth());
   const currentNepaliYear = useRef(getNepaliYear());
 
-  const [searchText, setSearchText] = useState("");
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-
-  const [nepaliMonth, setNepaliMonth] = useState("");
-  const [openItemPicker, setItemPicker] = useState(false);
-  const [itemsNepaliMonth, setItemsNepaliMonth] = useState([
-    { label: "Baisakh", value: "1" },
-    { label: "Jestha", value: "2" },
-    { label: "Asar", value: "3" },
-    { label: "Shrawan", value: "4" },
-    { label: "Bhadra", value: "5" },
-    { label: "Aswin", value: "6" },
-    { label: "Kartik", value: "7" },
-    { label: "Mangsir", value: "8" },
-    { label: "Poush", value: "9" },
+  const [yearOpen, setYearOpen] = useState(false);
+  const [monthOpen, setMonthOpen] = useState(false);
+  const [yearValue, setYearValue] = useState(currentNepaliYear.current);
+  const [monthValue, setMonthValue] = useState(currentNepaliMonth.current);
+  const [itemsYear, setItemsYear] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [itemsMonth, setItemsMonth] = useState([
+    { label: "Baisakh", value: "01" },
+    { label: "Jestha", value: "02" },
+    { label: "Asar", value: "03" },
+    { label: "Shrawan", value: "04" },
+    { label: "Bhadra", value: "05" },
+    { label: "Aswin", value: "06" },
+    { label: "Kartik", value: "07" },
+    { label: "Mangsir", value: "08" },
+    { label: "Poush", value: "09" },
     { label: "Magh", value: "10" },
     { label: "Falgun", value: "11" },
     { label: "Chaitra", value: "12" },
   ]);
 
-  const getItemsData = useCallback(async () => {
-    // const result = await db.getAllAsync<ItemsListProps>(`
-    //   SELECT i.*, c.name as category_name
-    //   FROM Items i
-    //   JOIN Categories c ON i.category_id = c.id
-    // `);
-    // setItems(result);
-    //}, [db, setItems]);
-  }, [db]);
+  const onYearOpen = useCallback(() => {
+    setMonthOpen(false);
+  }, []);
+
+  const onMonthOpen = useCallback(() => {
+    setYearOpen(false);
+  }, []);
+
+  // Get Years from Db : Starts Here
+  const getAllYears = useCallback(async () => {
+    const result = await db.getAllAsync<{ year: string }>(`
+    SELECT DISTINCT Stocks.purchase_date_year AS year
+    FROM Stocks
+    UNION
+    SELECT DISTINCT Sales.sales_date_year AS year
+    FROM Sales
+    ORDER BY year DESC;
+    `);
+    if (result) {
+      let itemsYearFromDB = result.map((item) => ({
+        label: item.year.toString(),
+        value: item.year.toString(),
+      }));
+      if (
+        itemsYearFromDB.some((item) => item.value === currentNepaliYear.current)
+      ) {
+        setItemsYear(itemsYearFromDB);
+      } else {
+        setItemsYear([
+          {
+            label: currentNepaliYear.current,
+            value: currentNepaliYear.current,
+          },
+          ...itemsYearFromDB,
+        ]);
+      }
+    } else {
+      setItemsYear([
+        { label: currentNepaliYear.current, value: currentNepaliYear.current },
+      ]);
+    }
+    setYearValue(currentNepaliYear.current);
+  }, [db, setItemsYear]);
 
   useEffect(() => {
     db.withTransactionAsync(async () => {
-      await getItemsData();
+      await getAllYears();
     });
-
-    const focusListener = navigation.addListener("focus", getItemsData);
-
+    const focusListener = navigation.addListener("focus", getAllYears);
     return () => {
       focusListener(); // Unsubscribe the listener
     };
-  }, [db, navigation, getItemsData]);
+  }, [db, navigation, getAllYears]);
+  // Get Years from Db : Ends Here
+
+  // Get queryResult from Sales and Stocks Tbl for Choosen Month and Year
+  useEffect(() => {
+    console.log("year: ", yearValue);
+    console.log("month: ", monthValue);
+  }, [db, navigation, yearValue, monthValue]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.inputContainer}>
+      <View style={styles.dropDownContainer}>
         <DropDownPicker
-          open={openItemPicker}
-          value={nepaliMonth}
-          items={itemsNepaliMonth}
-          setOpen={setItemPicker}
-          setValue={setNepaliMonth}
-          setItems={setItemsNepaliMonth}
+          open={yearOpen}
+          onOpen={onYearOpen}
+          value={yearValue}
+          items={itemsYear}
+          setOpen={setYearOpen}
+          setValue={setYearValue}
+          setItems={setItemsYear}
+          placeholder="Select Year"
+          style={styles.dropDown}
+          textStyle={styles.dropDownText}
+          containerStyle={styles.dropDownContainer}
           zIndex={3000}
           zIndexInverse={1000}
         />
         <DropDownPicker
-          open={openItemPicker}
-          value={nepaliMonth}
-          items={itemsNepaliMonth}
-          setOpen={setItemPicker}
-          setValue={setNepaliMonth}
-          setItems={setItemsNepaliMonth}
-          zIndex={3000}
-          zIndexInverse={1000}
+          open={monthOpen}
+          onOpen={onMonthOpen}
+          value={monthValue}
+          items={itemsMonth}
+          setOpen={setMonthOpen}
+          setValue={setMonthValue}
+          setItems={setItemsMonth}
+          placeholder="Select Month"
+          style={styles.dropDown}
+          textStyle={styles.dropDownText}
+          containerStyle={styles.dropDownContainer}
+          zIndex={2000}
+          zIndexInverse={2000}
         />
       </View>
-      <View>
-        return (
-        <TouchableOpacity activeOpacity={0.7}>
-          <Card style={styles.container}></Card>
-        </TouchableOpacity>
-        );
-      </View>
+      <FlatList
+        data={[...itemsYear, ...itemsMonth]}
+        keyExtractor={(item) => item.value}
+        numColumns={3}
+        renderItem={({ item }) => (
+          <View style={styles.itemWrapper}>
+            <Text style={styles.itemText}>{item.label}</Text>
+          </View>
+        )}
+        contentContainerStyle={styles.itemContainer}
+      />
     </View>
   );
 };
@@ -94,11 +147,37 @@ const Reports = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  inputContainer: {
-    marginVertical: 8,
+  dropDownContainer: {
+    width: "97%",
+    marginVertical: 10,
+  },
+  dropDown: {
+    backgroundColor: "#f1f1f1",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  dropDownText: {
+    fontSize: 16,
+  },
+  itemContainer: {
+    paddingHorizontal: 16,
+  },
+  itemWrapper: {
+    backgroundColor: "#f1f1f1",
+    padding: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+    marginVertical: 4,
+  },
+  itemText: {
+    fontSize: 16,
   },
 });
 
