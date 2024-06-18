@@ -10,7 +10,9 @@ const Reports: React.FC = () => {
   const navigation = useNavigation();
   const db = useSQLiteContext();
 
-  const [reportResult, setReportResult] = useState();
+  const [reportResult, setReportResult] = useState<
+    (SalesItem | PurchaseItem)[]
+  >([]);
 
   const currentNepaliMonth = useRef(getNepaliMonth());
   const currentNepaliYear = useRef(getNepaliYear());
@@ -103,9 +105,9 @@ const Reports: React.FC = () => {
       focusListener(); // Unsubscribe the listener
     };
   }, [db, navigation, getAllYears]);
-
   // Get Years from Db : Ends Here
 
+  // Get queryResult from Sales OR Stocks Tbl for Choosen Month and Year
   const getReportData = useCallback(async () => {
     // console.log(yearValue);
     // console.log(monthValue);
@@ -142,6 +144,7 @@ const Reports: React.FC = () => {
       reportResult = await db.getAllAsync<PurchaseItem>(reportQuery);
     }
     console.log(reportResult);
+    setReportResult(reportResult);
   }, [db, setReportResult, yearValue, monthValue, reportTypeValue]);
 
   useEffect(() => {
@@ -153,9 +156,6 @@ const Reports: React.FC = () => {
       focusListener(); // Unsubscribe the listener
     };
   }, [db, navigation, getReportData, yearValue, monthValue, reportTypeValue]);
-
-  // Get queryResult from Sales OR Stocks Tbl for Choosen Month and Year
-
   // Ends here: query for Reports
 
   return (
@@ -208,12 +208,12 @@ const Reports: React.FC = () => {
         />
       </View>
       <FlatList
-        data={[...itemsYear, ...itemsMonth]}
-        keyExtractor={(item) => item.value}
+        data={[...reportResult]}
+        keyExtractor={(item) => item.id.toString()}
         numColumns={3}
         renderItem={({ item }) => (
           <View style={styles.itemWrapper}>
-            <Text style={styles.itemText}>{item.label}</Text>
+            <Text style={styles.itemText}>{item.type}</Text>
           </View>
         )}
         contentContainerStyle={styles.itemContainer}
