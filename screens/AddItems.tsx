@@ -19,7 +19,9 @@ function AddItems() {
 
   const [open, setOpen] = useState(false);
   const [value, setCategory] = useState("");
-  const [items, setItems] = useState([{ label: "Select an item", value: "0" }]);
+  const [items, setItems] = useState([
+    { label: "Select Category for Item", value: "0" },
+  ]);
 
   const [errors, setErrors] = useState<ItemsListAddProps | undefined>();
 
@@ -107,7 +109,7 @@ function AddItems() {
           style={styles.input}
           value={name}
           onChangeText={setName}
-          placeholder="Enter Item name"
+          placeholder="Enter Item Name"
         />
         {errors?.name && <Text style={styles.errorText}>{errors.name}</Text>}
       </View>

@@ -1,7 +1,8 @@
+import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import Background from "../components/ui/Background";
 import Button from "../components/ui/Button";
 import Header from "../components/ui/Header";
@@ -14,6 +15,7 @@ export default function LoginScreen() {
   const navigation = useNavigation();
 
   const [password, setPassword] = useState({ value: "", error: "" });
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const hashPassword = (password: string, salt: string = ""): string => {
     let hash = 0;
@@ -74,8 +76,17 @@ export default function LoginScreen() {
         onChangeText={(text: string) => setPassword({ value: text, error: "" })}
         error={!!password.error}
         errorText={password.error}
-        secureTextEntry
+        secureTextEntry={!isPasswordVisible}
       />
+      <TouchableOpacity
+        onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+      >
+        <Feather
+          name={isPasswordVisible ? "eye" : "eye-off"}
+          size={24}
+          color="grey"
+        />
+      </TouchableOpacity>
       <Button mode="contained" onPress={onLoginPressed}>
         Login
       </Button>
