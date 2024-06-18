@@ -1,22 +1,34 @@
 import { useNavigation } from "@react-navigation/native";
 import { useSQLiteContext } from "expo-sqlite";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { PurchaseItem, SalesItem } from "../types";
+import SalesList from "../components/SalesList";
+import StocksList from "../components/StocksList";
+import Card from "../components/ui/Card";
+import { theme } from "../core/theme";
+import { SalesListProps, StockListProps } from "../types";
 import { getNepaliMonth, getNepaliYear } from "../utils/nepaliDate";
 
 const Reports: React.FC = () => {
   const navigation = useNavigation();
   const db = useSQLiteContext();
 
-  const [reportResult, setReportResult] = useState<
-    (SalesItem | PurchaseItem)[]
+  const [reportResultSale, setReportResultSale] = useState<SalesListProps[]>(
+    []
+  );
+  const [reportResultPurchase, setReportResultPurchase] = useState<
+    StockListProps[]
   >([]);
 
   const currentNepaliMonth = useRef(getNepaliMonth());
   const currentNepaliYear = useRef(getNepaliYear());
 
+  const [headingFor, setHeadingFor] = useState("Sales");
+  const [headingDetails, setHeadingDetails] = useState({
+    count: "0",
+    total: "0.00",
+  });
   const [yearOpen, setYearOpen] = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -62,96 +74,171 @@ const Reports: React.FC = () => {
 
   // Get Years from Db : Starts Here
   const getAllYears = useCallback(async () => {
-    const result = await db.getAllAsync<{ year: string }>(`
-    SELECT DISTINCT Stocks.purchase_date_year AS year
-    FROM Stocks
-    UNION
-    SELECT DISTINCT Sales.sales_date_year AS year
-    FROM Sales
-    ORDER BY year DESC;
+    try {
+      const result = await db.getAllAsync<{ year: string }>(`
+      SELECT DISTINCT Stocks.purchase_date_year AS year
+      FROM Stocks
+      UNION
+      SELECT DISTINCT Sales.sales_date_year AS year
+      FROM Sales
+      ORDER BY year DESC;
     `);
-    if (result) {
-      let itemsYearFromDB = result.map((item) => ({
-        label: item.year.toString(),
-        value: item.year.toString(),
-      }));
-      if (
-        itemsYearFromDB.some((item) => item.value === currentNepaliYear.current)
-      ) {
-        setItemsYear(itemsYearFromDB);
+
+      if (result) {
+        let itemsYearFromDB = result.map((item) => ({
+          label: item.year.toString(),
+          value: item.year.toString(),
+        }));
+
+        if (
+          itemsYearFromDB.some(
+            (item) => item.value === currentNepaliYear.current
+          )
+        ) {
+          setItemsYear(itemsYearFromDB);
+        } else {
+          setItemsYear([
+            {
+              label: currentNepaliYear.current,
+              value: currentNepaliYear.current,
+            },
+            ...itemsYearFromDB,
+          ]);
+        }
       } else {
         setItemsYear([
           {
             label: currentNepaliYear.current,
             value: currentNepaliYear.current,
           },
-          ...itemsYearFromDB,
         ]);
       }
-    } else {
-      setItemsYear([
-        { label: currentNepaliYear.current, value: currentNepaliYear.current },
-      ]);
+
+      setYearValue(currentNepaliYear.current);
+    } catch (error) {
+      console.error("Error getting years from the database:", error);
     }
-    setYearValue(currentNepaliYear.current);
   }, [db, setItemsYear]);
 
   useEffect(() => {
-    db.withTransactionAsync(async () => {
-      await getAllYears();
-    });
     const focusListener = navigation.addListener("focus", getAllYears);
+
+    getAllYears();
+
     return () => {
       focusListener(); // Unsubscribe the listener
     };
   }, [db, navigation, getAllYears]);
   // Get Years from Db : Ends Here
 
+  // Report Result Info
+  const ResultInfo = ({
+    headingFor,
+    headingDetails,
+  }: {
+    headingFor: string;
+    headingDetails: { count: string; total: string };
+  }) => {
+    return (
+      <View>
+        <Card style={styles.resultInfoContainer}>
+          <Text style={styles.resultInfoHeading}>{headingFor}</Text>
+          <Text style={styles.resultInfoDetails}>
+            Total {headingFor}: {headingDetails.count}, Total Amount: रु
+            {headingDetails.total}
+          </Text>
+        </Card>
+      </View>
+    );
+  };
   // Get queryResult from Sales OR Stocks Tbl for Choosen Month and Year
   const getReportData = useCallback(async () => {
-    // console.log(yearValue);
-    // console.log(monthValue);
-    // console.log(reportTypeValue);
+    try {
+      // '${reportTypeValue}' AS type,
+      // ${
+      //   reportTypeValue === "Sales"
+      //     ? `SUM(s.sales_total) AS total_sales_for_this_month`
+      //     : `SUM(s.cost_per_unit * s.quantity) AS total_purchase_for_this_month`
+      // }
+      // FROM
+      //   ${reportTypeValue} s
 
-    const reportQuery = `SELECT s.*,
-        COALESCE(i.name, s.item_id || '(DeletedItem)') AS item_name,
-        '${reportTypeValue}' AS type,
+      const reportQuery = `SELECT s.*, 
+      COALESCE(i.name, s.item_id || '(DeletedItem)') AS item_name,
+      '${reportTypeValue}' AS type
+      FROM
+        ${reportTypeValue} s
+      LEFT JOIN
+       Items i
+      ON
+        s.item_id = i.id
+      WHERE
         ${
           reportTypeValue === "Sales"
-            ? `SUM(s.sales_total) AS total_sales_for_this_month`
-            : `SUM(s.cost_per_unit * s.quantity) AS total_purchase_for_this_month`
+            ? `s.sales_date_year = ${yearValue} AND s.sales_date_month = ${monthValue}`
+            : `s.purchase_date_year = ${yearValue} AND s.purchase_date_month = ${monthValue}`
         }
-        FROM
-          ${reportTypeValue} s
-        LEFT JOIN
-         Items i
-        ON
-          s.item_id = i.id
-        WHERE
-          ${
-            reportTypeValue === "Sales"
-              ? `s.sales_date_year = ${yearValue} AND s.sales_date_month = ${monthValue}`
-              : `s.purchase_date_year = ${yearValue} AND s.purchase_date_month = ${monthValue}`
-          }
-        GROUP BY s.id`;
+      GROUP BY s.id`;
 
-    //console.log(reportQuery);
-
-    let reportResult: (SalesItem | PurchaseItem)[];
-    if (reportTypeValue === "Sales") {
-      reportResult = await db.getAllAsync<SalesItem>(reportQuery);
-    } else {
-      reportResult = await db.getAllAsync<PurchaseItem>(reportQuery);
+      if (reportTypeValue === "Sales") {
+        setHeadingFor("Sales");
+        const salesResult = await db.getAllAsync<SalesListProps>(reportQuery);
+        // get sales total for month to show
+        if (salesResult.length !== 0) {
+          const totalSalesForThisMonth = salesResult.reduce(
+            (sum, item) => sum + item.sales_total,
+            0
+          );
+          setHeadingDetails({
+            count: salesResult.length.toString(),
+            total: totalSalesForThisMonth.toString(),
+          });
+        } else {
+          setHeadingDetails({
+            count: "0",
+            total: "0.00",
+          });
+        }
+        // set salesResult to setReportResultSale
+        setReportResultSale(salesResult);
+      } else {
+        setHeadingFor("Purchase");
+        const stockResult = await db.getAllAsync<StockListProps>(reportQuery);
+        // get sales total for month to show
+        if (stockResult.length !== 0) {
+          const totalPurchaseForThisMonth = stockResult.reduce(
+            (sum, item) => sum + item.cost_per_unit * item.quantity,
+            0
+          );
+          setHeadingDetails({
+            count: stockResult.length.toString(),
+            total: totalPurchaseForThisMonth.toString(),
+          });
+        } else {
+          setHeadingDetails({
+            count: "0",
+            total: "0.00",
+          });
+        }
+        setReportResultPurchase(stockResult);
+      }
+    } catch (error) {
+      console.error("Error getting report data from the database:", error);
     }
-    console.log(reportResult);
-    setReportResult(reportResult);
-  }, [db, setReportResult, yearValue, monthValue, reportTypeValue]);
+  }, [
+    db,
+    setReportResultSale,
+    setReportResultPurchase,
+    yearValue,
+    monthValue,
+    reportTypeValue,
+  ]);
 
   useEffect(() => {
-    db.withTransactionAsync(async () => {
-      await getReportData();
-    });
     const focusListener = navigation.addListener("focus", getReportData);
+
+    getReportData();
+
     return () => {
       focusListener(); // Unsubscribe the listener
     };
@@ -159,7 +246,7 @@ const Reports: React.FC = () => {
   // Ends here: query for Reports
 
   return (
-    <View style={styles.container}>
+    <View style={styles.mainContainer}>
       <View style={styles.dropDownContainer}>
         <DropDownPicker
           open={yearOpen}
@@ -207,31 +294,37 @@ const Reports: React.FC = () => {
           zIndexInverse={3000}
         />
       </View>
-      <FlatList
-        data={[...reportResult]}
-        keyExtractor={(item) => item.id.toString()}
-        numColumns={3}
-        renderItem={({ item }) => (
-          <View style={styles.itemWrapper}>
-            <Text style={styles.itemText}>{item.type}</Text>
-          </View>
+      <ScrollView
+        contentContainerStyle={{
+          padding: 15,
+          paddingVertical: 10,
+          flex: 1,
+        }}
+      >
+        <ResultInfo headingFor={headingFor} headingDetails={headingDetails} />
+        {reportTypeValue === "Sales" ? (
+          <SalesList allitems={reportResultSale} navigation={navigation} />
+        ) : (
+          <StocksList
+            allStocks={reportResultPurchase}
+            navigation={navigation}
+          />
         )}
-        contentContainerStyle={styles.itemContainer}
-      />
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     backgroundColor: "#fff",
-    alignItems: "center",
     justifyContent: "center",
   },
   dropDownContainer: {
-    width: "97%",
+    width: "95%",
     marginVertical: 10,
+    marginHorizontal: 10,
   },
   dropDown: {
     backgroundColor: "#f1f1f1",
@@ -244,18 +337,23 @@ const styles = StyleSheet.create({
   dropDownText: {
     fontSize: 16,
   },
-  itemContainer: {
-    paddingHorizontal: 16,
+  resultInfoContainer: {
+    marginBottom: 12,
+    backgroundColor: theme.colors.secondary,
+    //paddingBottom: 7,
+    // Add other container styles as necessary
   },
-  itemWrapper: {
-    backgroundColor: "#f1f1f1",
-    padding: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
-    marginVertical: 4,
+  resultInfoHeading: {
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: theme.colors.heading,
+    textDecorationLine: "underline",
   },
-  itemText: {
-    fontSize: 16,
+  resultInfoDetails: {
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#f2f2f2",
   },
 });
 
