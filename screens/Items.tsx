@@ -40,7 +40,9 @@ const ItemsScreen = () => {
     });
   }
   return (
-    <ScrollView contentContainerStyle={{ padding: 15, paddingVertical: 10 }}>
+    <ScrollView
+      contentContainerStyle={{ padding: 15, paddingVertical: 10, flex: 1 }}
+    >
       <ItemsList allitems={allitems} deleteItem={deleteItem} />
       <TouchableOpacity
         style={{

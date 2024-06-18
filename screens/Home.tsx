@@ -173,7 +173,7 @@ function StockSummary({ stockStatus }: { stockStatus: InStockListProps[] }) {
   // Function to determine the style based on the value (positive or negative)
   const getStockTextStyle = (value: number): TextStyle => ({
     fontWeight: "bold",
-    color: value < 10 ? "#ff4500" : "#2e8b57", // Red for negative, custom green for positive
+    color: value < 20 ? "#ff4500" : "#2e8b57", // Red for negative, custom green for positive
   });
 
   return (
