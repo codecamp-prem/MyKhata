@@ -1,3 +1,4 @@
+import { useSQLiteContext } from "expo-sqlite";
 import { useLayoutEffect, useState } from "react";
 import {
   Alert,
@@ -9,48 +10,71 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import ItemsRepository from "../services/ItemsRepository";
-import { ItemsListAddProps } from "../types";
+import { Categories, ItemsListAddProps } from "../types";
 
 function AddItems() {
-  const itemsRepository = new ItemsRepository();
+  const db = useSQLiteContext();
 
   const [name, setName] = useState("");
+
   const [open, setOpen] = useState(false);
   const [value, setCategory] = useState("");
   const [items, setItems] = useState([
     { label: "Select Category for Item", value: "0" },
   ]);
+
   const [errors, setErrors] = useState<ItemsListAddProps | undefined>();
 
   useLayoutEffect(() => {
-    (async () => {
-      const categories = await itemsRepository.getCategoryData();
-      setItems(categories);
-    })();
-  }, []);
+    db.withTransactionAsync(async () => {
+      await getCategoryData();
+    });
+  }, [db]);
+
+  async function getCategoryData() {
+    const result = await db.getAllAsync<Categories>(`SELECT * FROM Categories`);
+    const newResult = result.map((item) => ({
+      label: item.name,
+      value: item.id.toString(),
+    }));
+    setItems(newResult);
+  }
 
   const validate = () => {
     let isValid = true;
 
     if (!name.trim()) {
+      // newErrors.name = "Category name is required";
       setErrors({ name: "Item name is required" });
       isValid = false;
     }
     if (!value.trim()) {
-      setErrors({ category_id: "Item Category is required" });
+      // newErrors.name = "Category name is required";
+      setErrors({ category_id: "Item Category  is required" });
       isValid = false;
     }
 
     return isValid;
   };
-
   const handleSubmit = async () => {
     if (validate()) {
       try {
-        await itemsRepository.addItem(parseInt(value), name);
+        //await insert in Items TBL (name);
+        db.withTransactionAsync(async () => {
+          await db.runAsync(
+            `
+              INSERT INTO Items (
+                category_id,
+                name
+              )
+              VALUES (?, ?);
+            `,
+            [parseInt(value), name]
+          );
+        });
         Alert.alert("Item Added Successfully.");
         clearFormFields();
+        // Navigate back to the HomeScreen or display a success message
       } catch (error) {
         Alert.alert("Error", "Unable to add stock. Please try again later.");
       }
@@ -59,7 +83,7 @@ function AddItems() {
 
   const clearFormFields = () => {
     setName("");
-    Keyboard.dismiss();
+    Keyboard.dismiss(); // Dismiss the keyboard
   };
 
   return (
@@ -93,6 +117,7 @@ function AddItems() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
