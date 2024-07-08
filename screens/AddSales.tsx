@@ -1,5 +1,4 @@
 import { useNavigation } from "@react-navigation/native";
-import { useSQLiteContext } from "expo-sqlite";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -11,7 +10,8 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Items, SalesListAddProps } from "../types";
+import SalesRepository, { SalesData } from "../services/SalesRepository";
+import { SalesListAddProps } from "../types";
 import {
   getNepaliGatey,
   getNepaliMonth,
@@ -20,7 +20,6 @@ import {
 
 function AddItems() {
   const navigation = useNavigation();
-  const db = useSQLiteContext();
 
   const [billNo, setBillNo] = useState("");
   const [itemValue, setItemValue] = useState("");
@@ -35,80 +34,45 @@ function AddItems() {
 
   const [errors, setErrors] = useState<SalesListAddProps | undefined>();
 
+  const salesRepository = new SalesRepository();
+
   useLayoutEffect(() => {
-    db.withTransactionAsync(async () => {
-      await getItemData();
-    });
-  }, [db]);
+    (async () => {
+      setItems(await salesRepository.getItemData());
+    })();
+  }, []);
 
-  async function getItemData() {
-    const result = await db.getAllAsync<Items>(`SELECT * FROM Items`);
-    const newResult = result.map((item) => ({
-      label: item.name,
-      value: item.id.toString(),
-    }));
-    setItems(newResult);
-  }
-
-  const validate = () => {
-    let isValid = true;
-
-    if (!sales_total.trim()) {
-      setErrors({ sales_total: "Sales total is required" });
-      isValid = false;
-    }
-
-    if (!quantity.trim()) {
-      setErrors({ quantity: "Item Quantity is required" });
-      isValid = false;
-    }
-
-    if (!itemValue.trim()) {
-      setErrors({ item_id: "Item is required" });
-      isValid = false;
-    }
-    if (!billNo.trim()) {
-      setErrors({ bill_no: "Bill no. is required" });
-      isValid = false;
-    }
-    return isValid;
-  };
   const handleSubmit = async () => {
-    if (validate()) {
-      try {
-        //await insert in Sales TBL (name);
-        db.withTransactionAsync(async () => {
-          await db.runAsync(
-            `
-              INSERT INTO Sales (
-                bill_no,
-                item_id,
-                sales_date_year,
-                sales_date_month,
-                sales_date_gatey,
-                quantity,
-                sales_total
-              )
-              VALUES (?, ?, ?, ?, ?, ?, ?);
-            `,
-            [
-              billNo,
-              itemValue,
-              sales_date_year.current,
-              sales_date_month.current,
-              sales_date_gatey.current,
-              quantity,
-              sales_total,
-            ]
-          );
-        });
-        Alert.alert("Item Added Successfully.");
-        clearFormFields();
-        // Navigate back to the HomeScreen or display a success message
-        navigation.navigate("Sales" as never);
-      } catch (error) {
-        Alert.alert("Error", "Unable to add stock. Please try again later.");
+    const salesData: SalesData = {
+      bill_no: billNo,
+      item_id: itemValue,
+      sales_date_year: sales_date_year.current,
+      sales_date_month: sales_date_month.current,
+      sales_date_gatey: sales_date_gatey.current,
+      quantity,
+      sales_total,
+    };
+
+    try {
+      await salesRepository.addSales(salesData);
+      Alert.alert("Item Added Successfully.");
+      clearFormFields();
+      navigation.navigate("Sales" as never);
+    } catch (error) {
+      let errorMessage = "Unable to add stock. Please try again later.";
+      if (error instanceof Error) {
+        try {
+          const errors = JSON.parse(error.message) as SalesListAddProps;
+          setErrors(errors);
+          errorMessage =
+            "There was an error adding the item. Please check the form and try again.";
+        } catch (parseError) {
+          console.error("Error parsing error message:", parseError);
+        }
+      } else {
+        console.error("Unexpected error:", error);
       }
+      Alert.alert("Error", errorMessage);
     }
   };
 

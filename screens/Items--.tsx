@@ -1,40 +1,44 @@
-// ItemsScreen.tsx
 import { Entypo } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useEffect, useState } from "react";
+import { useSQLiteContext } from "expo-sqlite";
+import { useCallback, useEffect, useState } from "react";
 import { ScrollView, TouchableOpacity } from "react-native";
 import ItemsList from "../components/ItemsList";
-import ItemsRepository from "../services/ItemsRepository";
 import { ItemsListProps } from "../types";
 
 const ItemsScreen = () => {
   const navigation = useNavigation();
   const [allitems, setItems] = useState<ItemsListProps[]>([]);
-  const itemsRepository = new ItemsRepository();
+
+  const db = useSQLiteContext();
+
+  const getItemsData = useCallback(async () => {
+    const result = await db.getAllAsync<ItemsListProps>(`
+      SELECT i.*, c.name as category_name
+      FROM Items i
+      JOIN Categories c ON i.category_id = c.id
+    `);
+    setItems(result);
+  }, [db, setItems]);
 
   useEffect(() => {
-    const initialize = async () => {
-      const result = await itemsRepository.getItemsData();
-      setItems(result);
+    db.withTransactionAsync(async () => {
+      await getItemsData();
+    });
 
-      const focusListener = navigation.addListener("focus", async () => {
-        const updatedItems = await itemsRepository.getItemsData();
-        setItems(updatedItems);
-      });
+    const focusListener = navigation.addListener("focus", getItemsData);
 
-      return () => {
-        focusListener(); // Unsubscribe the listener
-      };
+    return () => {
+      focusListener(); // Unsubscribe the listener
     };
-    initialize();
-  }, [navigation, itemsRepository]);
+  }, [db, navigation, getItemsData]);
 
   async function deleteItem(id: number) {
-    await itemsRepository.deleteItem(id);
-    const updatedItems = await itemsRepository.getItemsData();
-    setItems(updatedItems);
+    db.withTransactionAsync(async () => {
+      await db.runAsync(`DELETE FROM Items WHERE id = ?;`, [id]);
+      await getItemsData();
+    });
   }
-
   return (
     <ScrollView
       contentContainerStyle={{ padding: 15, paddingVertical: 10, flex: 1 }}
