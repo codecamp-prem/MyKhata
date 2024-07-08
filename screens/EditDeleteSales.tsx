@@ -1,5 +1,4 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useSQLiteContext } from "expo-sqlite";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -11,7 +10,8 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Items, Sales, SalesListAddProps } from "../types";
+import SalesRepository, { SalesData } from "../services/SalesRepository";
+import { SalesListAddProps } from "../types";
 
 function EditDeleteSales() {
   const navigation = useNavigation();
@@ -31,9 +31,7 @@ function EditDeleteSales() {
 
   const param_salesId = routeParams.salesId;
 
-  const db = useSQLiteContext();
-
-  const [billNo, setBillNo] = useState("");
+  const [bill_no, setBillNo] = useState("");
   const [itemValue, setItemValue] = useState("");
   const sales_date_year = useRef("");
   const sales_date_month = useRef("");
@@ -46,46 +44,31 @@ function EditDeleteSales() {
 
   const [errors, setErrors] = useState<SalesListAddProps | undefined>();
 
+  const salesRepository = new SalesRepository();
+
   useLayoutEffect(() => {
-    db.withTransactionAsync(async () => {
-      await getItemData(param_salesId);
-    });
-  }, [db, param_salesId]);
-
-  async function getItemData(param_salesId: number) {
-    const result = await db.getAllAsync<Items>(`SELECT * FROM Items`);
-    const newResult = result.map((item) => ({
-      label: item.name,
-      value: item.id.toString(),
-    }));
-    setItems(newResult);
-
-    // get the data from the `Sales` TBL with the help of param sales_id
-    // set the value to the form fields.
-    const sales_details_from_id = await db.getAllAsync<Sales>(
-      `SELECT * FROM Sales WHERE id = ?`,
-      param_salesId
-    );
-
-    setBillNo(sales_details_from_id[0].bill_no.toString());
-    setItemValue(sales_details_from_id[0].item_id.toString());
-    sales_date_year.current =
-      sales_details_from_id[0].sales_date_year.toString();
-    sales_date_month.current =
-      sales_details_from_id[0].sales_date_month.toString();
-    sales_date_gatey.current =
-      sales_details_from_id[0].sales_date_gatey.toString();
-    setQuantity(sales_details_from_id[0].quantity.toString());
-    setSalesTotal(sales_details_from_id[0].sales_total.toString());
-  }
-
-  async function deleteItem(id: number) {
-    db.withTransactionAsync(async () => {
-      await db.runAsync(`DELETE FROM Sales WHERE id = ?;`, [id]);
-    });
-    Alert.alert("Sales deleted successfully.");
-    navigation.navigate("Sales" as never);
-  }
+    const fetchSalesData = async () => {
+      const sales_details_from_id = await salesRepository.getSalesDetailsById(
+        param_salesId
+      );
+      if (sales_details_from_id) {
+        setBillNo(sales_details_from_id.bill_no.toString());
+        setItemValue(sales_details_from_id.item_id.toString());
+        sales_date_year.current =
+          sales_details_from_id.sales_date_year.toString();
+        sales_date_month.current =
+          sales_details_from_id.sales_date_month.toString();
+        sales_date_gatey.current =
+          sales_details_from_id.sales_date_gatey.toString();
+        setQuantity(sales_details_from_id.quantity.toString());
+        setSalesTotal(sales_details_from_id.sales_total.toString());
+      }
+    };
+    fetchSalesData();
+    (async () => {
+      setItems(await salesRepository.getItemData());
+    })();
+  }, [param_salesId]);
 
   const handleShowAlert = (item_id: number) => {
     Alert.alert(
@@ -99,7 +82,11 @@ function EditDeleteSales() {
         },
         {
           text: "Yes",
-          onPress: () => deleteItem(item_id),
+          onPress: () => {
+            salesRepository.deleteSales(item_id);
+            Alert.alert("Sales deleted successfully.");
+            navigation.navigate("Sales" as never);
+          },
         },
       ],
       { cancelable: true }
@@ -123,42 +110,57 @@ function EditDeleteSales() {
       setErrors({ item_id: "Item is required" });
       isValid = false;
     }
-    if (!billNo.trim()) {
+    if (!bill_no.trim()) {
       setErrors({ bill_no: "Bill no. is required" });
       isValid = false;
     }
 
     return isValid;
   };
-  const handleSubmit = async () => {
-    if (validate()) {
-      try {
-        //await insert in Sales TBL (name);
-        db.withTransactionAsync(async () => {
-          await db.runAsync(
-            `
-              UPDATE Sales
-              SET
-                bill_no = ?,
-                item_id = ?,
-                quantity = ?,
-                sales_total = ?
-              WHERE id = ?;
-            `,
-            [billNo, itemValue, quantity, sales_total, param_salesId]
-          );
-        });
-        Alert.alert("Item Updated Successfully.");
-        clearFormFields();
-        // Navigate back to the HomeScreen or display a success message
-      } catch (error) {
-        Alert.alert("Error", "Unable to add stock. Please try again later.");
-      }
-    }
-  };
 
   const clearFormFields = () => {
     Keyboard.dismiss(); // Dismiss the keyboard
+  };
+
+  const handleSubmit = async () => {
+    if (validate()) {
+      const salesData: SalesData = {
+        bill_no,
+        item_id: itemValue,
+        sales_date_year: sales_date_year.current,
+        sales_date_month: sales_date_month.current,
+        sales_date_gatey: sales_date_gatey.current,
+        quantity,
+        sales_total,
+      };
+
+      try {
+        await salesRepository.updateSales(
+          param_salesId,
+          salesData.bill_no,
+          salesData.item_id,
+          salesData.quantity,
+          salesData.sales_total
+        );
+        Alert.alert("Sales Updated Successfully.");
+        clearFormFields();
+      } catch (error) {
+        let errorMessage = "Unable to Update Sales. Please try again later.";
+        if (error instanceof Error) {
+          try {
+            const errors = JSON.parse(error.message) as SalesListAddProps;
+            setErrors(errors);
+            errorMessage =
+              "There was an error updating the Sales. Please check the form and try again.";
+          } catch (parseError) {
+            console.error("Error parsing error message:", parseError);
+          }
+        } else {
+          console.error("Unexpected error:", error);
+        }
+        Alert.alert("Error", errorMessage);
+      }
+    }
   };
 
   return (
@@ -167,7 +169,7 @@ function EditDeleteSales() {
         <Text style={styles.label}>Sales Bill No.:</Text>
         <TextInput
           style={styles.input}
-          value={billNo}
+          value={bill_no}
           onChangeText={setBillNo}
           placeholder="Enter Bill no."
           keyboardType="numeric"
@@ -203,7 +205,7 @@ function EditDeleteSales() {
         <TextInput
           style={styles.input}
           value={quantity}
-          onChangeText={setQuantity}
+          onChangeText={(inputQty) => setQuantity(inputQty)}
           placeholder="Enter Item Quantity"
           keyboardType="numeric"
         />

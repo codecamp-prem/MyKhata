@@ -1,5 +1,5 @@
 import { useSQLiteContext } from "expo-sqlite";
-import { Items, SalesListAddProps } from "../types";
+import { Items, Sales, SalesListAddProps } from "../types";
 
 export interface SalesData {
   bill_no: string;
@@ -83,6 +83,45 @@ class SalesRepository {
           salesData.sales_total,
         ]
       );
+    });
+  }
+
+  async getSalesDetailsById(param_salesId: number): Promise<Sales | undefined> {
+    const sales_details_from_id = await this.db.getAllAsync<Sales>(
+      `SELECT * FROM Sales WHERE id = ?`,
+      param_salesId
+    );
+    return sales_details_from_id.length > 0
+      ? sales_details_from_id[0]
+      : undefined;
+  }
+
+  async updateSales(
+    param_salesId: number,
+    bill_no: string,
+    item_id: string,
+    quantity: string,
+    sales_total: string
+  ): Promise<void> {
+    await this.db.withTransactionAsync(async () => {
+      await this.db.runAsync(
+        `
+          UPDATE Sales
+          SET
+            bill_no = ?,
+            item_id = ?,
+            quantity = ?,
+            sales_total = ?
+          WHERE id = ?;
+        `,
+        [bill_no, item_id, quantity, sales_total, param_salesId]
+      );
+    });
+  }
+
+  async deleteSales(id: number): Promise<void> {
+    await this.db.withTransactionAsync(async () => {
+      await this.db.runAsync(`DELETE FROM Sales WHERE id = ?;`, [id]);
     });
   }
 }
