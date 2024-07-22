@@ -1,5 +1,4 @@
 import { useNavigation } from "@react-navigation/native";
-import { useSQLiteContext } from "expo-sqlite";
 import { useLayoutEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -23,7 +22,6 @@ import {
 
 function AddStocks() {
   const navigation = useNavigation();
-  const db = useSQLiteContext();
 
   const [billNo, setBillNo] = useState("");
   const [itemId, setItemID] = useState("");
