@@ -82,6 +82,41 @@ class PurchaseRepository {
     });
   }
 
+  async getPurchaseDetailsById(
+    param_salesId: number
+  ): Promise<Stocks | undefined> {
+    const purchase_details_from_id = await this.db.getAllAsync<Stocks>(
+      `SELECT * FROM Stocks WHERE id = ?`,
+      param_salesId
+    );
+    return purchase_details_from_id.length > 0
+      ? purchase_details_from_id[0]
+      : undefined;
+  }
+
+  async updatePurchase(
+    param_stockId: number,
+    bill_no: string,
+    item_id: string,
+    quantity: string,
+    cost_per_unit: string
+  ): Promise<void> {
+    await this.db.withTransactionAsync(async () => {
+      await this.db.runAsync(
+        `
+            UPDATE Stocks
+            SET
+              bill_no = ?,
+              item_id = ?,
+              quantity = ?,
+              cost_per_unit = ?
+            WHERE id = ?;
+          `,
+        [bill_no, item_id, quantity, cost_per_unit, param_stockId]
+      );
+    });
+  }
+
   async updateStock(stock: Stocks) {
     try {
       await this.db.withTransactionAsync(async () => {
@@ -114,14 +149,10 @@ class PurchaseRepository {
     }
   }
 
-  async deleteStock(id: number) {
-    try {
-      await this.db.withTransactionAsync(async () => {
-        await this.db.runAsync(`DELETE FROM Stocks WHERE id = ?;`, [id]);
-      });
-    } catch (error) {
-      throw new Error("Unable to delete stock. Please try again later.");
-    }
+  async deleteStock(id: number): Promise<void> {
+    await this.db.withTransactionAsync(async () => {
+      await this.db.runAsync(`DELETE FROM Stocks WHERE id = ?;`, [id]);
+    });
   }
 }
 

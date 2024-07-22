@@ -11,7 +11,10 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Items, StockListAddProps, Stocks } from "../types";
+import PurchaseRepository, {
+  PurchaseData,
+} from "../services/PurchaseRepository";
+import { StockListAddProps } from "../types";
 
 function EditDeleteStocks() {
   const navigation = useNavigation();
@@ -46,46 +49,32 @@ function EditDeleteStocks() {
 
   const [errors, setErrors] = useState<StockListAddProps | undefined>();
 
+  const purchaseRepository = new PurchaseRepository();
+
   useLayoutEffect(() => {
-    db.withTransactionAsync(async () => {
-      await getItemData(param_stockId);
-    });
-  }, [db, param_stockId]);
-
-  async function getItemData(param_stockId: number) {
-    const result = await db.getAllAsync<Items>(`SELECT * FROM Items`);
-    const newResult = result.map((item) => ({
-      label: item.name,
-      value: item.id.toString(),
-    }));
-    setItems(newResult);
-
-    // get the data from the `Sales` TBL with the help of param sales_id
-    // set the value to the form fields.
-    const stocks_details_from_id = await db.getAllAsync<Stocks>(
-      `SELECT * FROM Stocks WHERE id = ?`,
-      param_stockId
-    );
-    setBillNo(stocks_details_from_id[0].bill_no.toString());
-    setItemID(stocks_details_from_id[0].item_id.toString());
-    purchase_date_year.current =
-      stocks_details_from_id[0].purchase_date_year.toString();
-    purchase_date_month.current =
-      stocks_details_from_id[0].purchase_date_month.toString();
-    purchase_date_gatey.current =
-      stocks_details_from_id[0].purchase_date_gatey.toString();
-    setQuantity(stocks_details_from_id[0].quantity.toString());
-    setSalesTotal(stocks_details_from_id[0].cost_per_unit.toString());
-    //console.log(sales_details_from_id);
-  }
-
-  async function deleteItem(id: number) {
-    db.withTransactionAsync(async () => {
-      await db.runAsync(`DELETE FROM Stocks WHERE id = ?;`, [id]);
-    });
-    Alert.alert("Stock deleted successfully.");
-    navigation.navigate("Stocks" as never);
-  }
+    const fetchPurchaseData = async () => {
+      const stocks_details_from_id =
+        await purchaseRepository.getPurchaseDetailsById(param_stockId);
+      if (stocks_details_from_id) {
+        // get the data from the `Stocks` TBL with the help of param sales_id
+        // set the value to the form fields.
+        setBillNo(stocks_details_from_id.bill_no.toString());
+        setItemID(stocks_details_from_id.item_id.toString());
+        purchase_date_year.current =
+          stocks_details_from_id.purchase_date_year.toString();
+        purchase_date_month.current =
+          stocks_details_from_id.purchase_date_month.toString();
+        purchase_date_gatey.current =
+          stocks_details_from_id.purchase_date_gatey.toString();
+        setQuantity(stocks_details_from_id.quantity.toString());
+        setSalesTotal(stocks_details_from_id.cost_per_unit.toString());
+      }
+    };
+    fetchPurchaseData();
+    (async () => {
+      setItems(await purchaseRepository.getItemData());
+    })();
+  }, [param_stockId]);
 
   const handleShowAlert = (item_id: number) => {
     Alert.alert(
@@ -99,7 +88,11 @@ function EditDeleteStocks() {
         },
         {
           text: "Yes",
-          onPress: () => deleteItem(item_id),
+          onPress: () => {
+            purchaseRepository.deleteStock(item_id);
+            Alert.alert("Purchase deleted successfully.");
+            navigation.navigate("Stocks" as never);
+          },
         },
       ],
       { cancelable: true }
@@ -130,27 +123,40 @@ function EditDeleteStocks() {
   };
   const handleSubmit = async () => {
     if (validate()) {
+      const purchaseData: PurchaseData = {
+        bill_no: billNo,
+        item_id: itemId,
+        purchase_date_year: purchase_date_year.current,
+        purchase_date_month: purchase_date_month.current,
+        purchase_date_gatey: purchase_date_gatey.current,
+        quantity: quantity,
+        cost_per_unit: cost_per_unit,
+      };
       try {
-        //await insert in Stocks TBL (name);
-        db.withTransactionAsync(async () => {
-          await db.runAsync(
-            `
-              UPDATE Stocks
-              SET
-                bill_no = ?,
-                item_id = ?,
-                quantity = ?,
-                cost_per_unit = ?
-              WHERE id = ?;
-            `,
-            [billNo, itemId, quantity, cost_per_unit, param_stockId]
-          );
-        });
-        Alert.alert("Stock Updated Successfully.");
+        await purchaseRepository.updatePurchase(
+          param_stockId,
+          purchaseData.bill_no,
+          purchaseData.item_id,
+          purchaseData.quantity,
+          purchaseData.cost_per_unit
+        );
+        Alert.alert("Purchase Updated Successfully.");
         clearFormFields();
-        // Navigate back to the HomeScreen or display a success message
       } catch (error) {
-        Alert.alert("Error", "Unable to add stock. Please try again later.");
+        let errorMessage = "Unable to Update Purchase. Please try again later.";
+        if (error instanceof Error) {
+          try {
+            const errors = JSON.parse(error.message) as StockListAddProps;
+            setErrors(errors);
+            errorMessage =
+              "There was an error updating the Sales. Please check the form and try again.";
+          } catch (parseError) {
+            console.error("Error parsing error message:", parseError);
+          }
+        } else {
+          console.error("Unexpected error:", error);
+        }
+        Alert.alert("Error", errorMessage);
       }
     }
   };
