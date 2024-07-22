@@ -52,6 +52,8 @@ function EditDeleteSales() {
         param_salesId
       );
       if (sales_details_from_id) {
+        // get the data from the `Sales` TBL with the help of param salesId
+        // set the value to the form fields.
         setBillNo(sales_details_from_id.bill_no.toString());
         setItemValue(sales_details_from_id.item_id.toString());
         sales_date_year.current =
@@ -150,15 +152,14 @@ function EditDeleteSales() {
           try {
             const errors = JSON.parse(error.message) as SalesListAddProps;
             setErrors(errors);
-            errorMessage =
-              "There was an error updating the Sales. Please check the form and try again.";
           } catch (parseError) {
             console.error("Error parsing error message:", parseError);
+            Alert.alert("Error", errorMessage);
           }
         } else {
           console.error("Unexpected error:", error);
+          Alert.alert("Error", errorMessage);
         }
-        Alert.alert("Error", errorMessage);
       }
     }
   };

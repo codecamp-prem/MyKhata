@@ -56,7 +56,7 @@ function EditDeleteStocks() {
       const stocks_details_from_id =
         await purchaseRepository.getPurchaseDetailsById(param_stockId);
       if (stocks_details_from_id) {
-        // get the data from the `Stocks` TBL with the help of param sales_id
+        // get the data from the `Stocks` TBL with the help of param stockId
         // set the value to the form fields.
         setBillNo(stocks_details_from_id.bill_no.toString());
         setItemID(stocks_details_from_id.item_id.toString());
@@ -79,7 +79,7 @@ function EditDeleteStocks() {
   const handleShowAlert = (item_id: number) => {
     Alert.alert(
       "Confirmation",
-      "Do you want to Delete this Stock detail?",
+      "Do you want to Delete this Purchase detail?",
       [
         {
           text: "Cancel",
@@ -148,15 +148,14 @@ function EditDeleteStocks() {
           try {
             const errors = JSON.parse(error.message) as StockListAddProps;
             setErrors(errors);
-            errorMessage =
-              "There was an error updating the Sales. Please check the form and try again.";
           } catch (parseError) {
             console.error("Error parsing error message:", parseError);
+            Alert.alert("Error", errorMessage);
           }
         } else {
           console.error("Unexpected error:", error);
+          Alert.alert("Error", errorMessage);
         }
-        Alert.alert("Error", errorMessage);
       }
     }
   };
