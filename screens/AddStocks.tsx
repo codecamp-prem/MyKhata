@@ -11,7 +11,10 @@ import {
   View,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
-import { Items, StockListAddProps } from "../types";
+import PurchaseRepository, {
+  PurchaseData,
+} from "../services/PurchaseRepository";
+import { StockListAddProps } from "../types";
 import {
   getNepaliGatey,
   getNepaliMonth,
@@ -35,80 +38,44 @@ function AddStocks() {
 
   const [errors, setErrors] = useState<StockListAddProps | undefined>();
 
+  const purchaseRepository = new PurchaseRepository();
+
   useLayoutEffect(() => {
-    db.withTransactionAsync(async () => {
-      await getItemData();
-    });
-  }, [db]);
+    (async () => {
+      setItems(await purchaseRepository.getItemData());
+    })();
+  }, []);
 
-  async function getItemData() {
-    const result = await db.getAllAsync<Items>(`SELECT * FROM Items`);
-    const newResult = result.map((item) => ({
-      label: item.name,
-      value: item.id.toString(),
-    }));
-    setItems(newResult);
-  }
-
-  const validate = () => {
-    let isValid = true;
-
-    if (!cost_per_unit.trim()) {
-      setErrors({ cost_per_unit: "Cost Per Unit is required" });
-      isValid = false;
-    }
-    if (!quantity.trim()) {
-      setErrors({ quantity: "Item Quantity is required" });
-      isValid = false;
-    }
-    if (!itemId.trim()) {
-      setErrors({ item_id: "Item is required" });
-      isValid = false;
-    }
-    if (!billNo.trim()) {
-      setErrors({ bill_no: "Purchase Bill No. is required" });
-      isValid = false;
-    }
-
-    return isValid;
-  };
   const handleSubmit = async () => {
-    if (validate()) {
-      try {
-        //await insert in Stocks TBL (name);
-        db.withTransactionAsync(async () => {
-          await db.runAsync(
-            `
-              INSERT INTO Stocks (
-                bill_no,
-                item_id,
-                purchase_date_year,
-                purchase_date_month,
-                purchase_date_gatey,
-                quantity,
-                cost_per_unit
-              )
-              VALUES (?, ?, ?, ?, ?, ?, ?);
-            `,
-            [
-              billNo,
-              itemId,
-              purchase_date_year.current,
-              purchase_date_month.current,
-              purchase_date_gatey.current,
-              quantity,
-              cost_per_unit,
-            ]
-          );
-        });
-        Alert.alert("Stock Added Successfully.");
-        clearFormFields();
-        // Navigate back to the HomeScreen or display a success message
-        //navigation.navigate("Stocks" as never);
-        navigation.goBack();
-      } catch (error) {
-        Alert.alert("Error", "Unable to add stock. Please try again later.");
+    const purchaseData: PurchaseData = {
+      bill_no: billNo,
+      item_id: itemId,
+      purchase_date_year: purchase_date_year.current,
+      purchase_date_month: purchase_date_month.current,
+      purchase_date_gatey: purchase_date_gatey.current,
+      quantity: quantity,
+      cost_per_unit: cost_per_unit,
+    };
+    try {
+      await purchaseRepository.addStock(purchaseData);
+      Alert.alert("Purchase Added Successfully.");
+      clearFormFields();
+      navigation.navigate("Stocks" as never);
+    } catch (error) {
+      let errorMessage = "Unable to add stock. Please try again later.";
+      if (error instanceof Error) {
+        try {
+          const errors = JSON.parse(error.message) as StockListAddProps;
+          setErrors(errors);
+          errorMessage =
+            "There was an error adding the Purchase. Please check the form and try again.";
+        } catch (parseError) {
+          console.error("Error parsing error message:", parseError);
+        }
+      } else {
+        console.error("Unexpected error:", error);
       }
+      Alert.alert("Error", errorMessage);
     }
   };
 
