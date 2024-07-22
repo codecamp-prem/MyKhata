@@ -62,7 +62,7 @@ function AddStocks() {
       clearFormFields();
       navigation.navigate("Stocks" as never);
     } catch (error) {
-      let errorMessage = "Unable to add stock. Please try again later.";
+      let errorMessage = "Unable to add Purchase. Please try again later.";
       if (error instanceof Error) {
         try {
           const errors = JSON.parse(error.message) as StockListAddProps;
@@ -71,17 +71,11 @@ function AddStocks() {
           //"There was an error adding the Purchase. Please check the form and try again.";
         } catch (parseError) {
           console.error("Error parsing error message:", parseError);
-          Alert.alert(
-            "Error",
-            "There was an error adding the Purchase. Please check the form and try again."
-          );
+          Alert.alert("Error", errorMessage);
         }
       } else {
         console.error("Unexpected error:", error);
-        Alert.alert(
-          "Error",
-          "There was an error adding the Purchase. Please check the form and try again."
-        );
+        Alert.alert("Error", errorMessage);
       }
     }
   };
