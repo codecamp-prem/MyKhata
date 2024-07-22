@@ -67,15 +67,22 @@ function AddStocks() {
         try {
           const errors = JSON.parse(error.message) as StockListAddProps;
           setErrors(errors);
-          errorMessage =
-            "There was an error adding the Purchase. Please check the form and try again.";
+          //errorMessage =
+          //"There was an error adding the Purchase. Please check the form and try again.";
         } catch (parseError) {
           console.error("Error parsing error message:", parseError);
+          Alert.alert(
+            "Error",
+            "There was an error adding the Purchase. Please check the form and try again."
+          );
         }
       } else {
         console.error("Unexpected error:", error);
+        Alert.alert(
+          "Error",
+          "There was an error adding the Purchase. Please check the form and try again."
+        );
       }
-      Alert.alert("Error", errorMessage);
     }
   };
 
