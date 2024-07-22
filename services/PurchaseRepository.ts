@@ -117,38 +117,6 @@ class PurchaseRepository {
     });
   }
 
-  async updateStock(stock: Stocks) {
-    try {
-      await this.db.withTransactionAsync(async () => {
-        await this.db.runAsync(
-          `
-            UPDATE Stocks
-            SET bill_no = ?,
-                item_id = ?,
-                purchase_date_year = ?,
-                purchase_date_month = ?,
-                purchase_date_gatey = ?,
-                quantity = ?,
-                cost_per_unit = ?
-            WHERE id = ?;
-          `,
-          [
-            stock.bill_no,
-            stock.item_id,
-            stock.purchase_date_year,
-            stock.purchase_date_month,
-            stock.purchase_date_gatey,
-            stock.quantity,
-            stock.cost_per_unit,
-            stock.id,
-          ]
-        );
-      });
-    } catch (error) {
-      throw new Error("Unable to update stock. Please try again later.");
-    }
-  }
-
   async deleteStock(id: number): Promise<void> {
     await this.db.withTransactionAsync(async () => {
       await this.db.runAsync(`DELETE FROM Stocks WHERE id = ?;`, [id]);
