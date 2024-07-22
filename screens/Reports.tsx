@@ -191,7 +191,7 @@ const Reports: React.FC = () => {
           );
           setHeadingDetails({
             count: salesResult.length.toString(),
-            total: totalSalesForThisMonth.toString(),
+            total: totalSalesForThisMonth.toFixed(2).toString(),
           });
         } else {
           setHeadingDetails({
