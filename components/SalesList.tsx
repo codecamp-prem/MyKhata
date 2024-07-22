@@ -32,7 +32,8 @@ const SalesList = ({
                 -{item.sales_date_gatey}
               </Text>
               <Text>
-                {item.item_name} ({item.quantity} ओटा) रु{item.sales_total}
+                {item.item_name} ({item.quantity} ओटा) रु
+                {item.sales_total.toFixed(2)}
               </Text>
             </Card>
           </TouchableOpacity>

@@ -34,7 +34,7 @@ const StocksList = ({
               <Text>
                 {stock.item_name} ({stock.quantity}ओटा * {stock.cost_per_unit}{" "}
                 प्रति गोटा) = रु
-                {stock.cost_per_unit * stock.quantity}
+                {(stock.cost_per_unit * stock.quantity).toFixed(2)}
               </Text>
             </Card>
           </TouchableOpacity>
